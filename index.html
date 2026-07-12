@@ -1,0 +1,3307 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0c1310">
+<title>永恆傳承 M0 — v0.7</title>
+<style>
+:root{
+  --night:#0c1310; --night-2:#131e18; --night-3:#1b2a21;
+  --moon:#e8e2cf; --moon-dim:#9aa08c;
+  --ember:#e08840; --energy:#d8c04a; --mana:#5a8ec8;
+  --blood:#c8503c; --pale:#f5eeda; --leaf:#5f8f6a; --gold:#d8b45a; --line:#26362c;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:var(--night); color:var(--moon);
+  font-family:"Noto Serif TC","PMingLiU",serif;
+  display:flex;flex-direction:column; max-width:760px;margin:0 auto;
+  user-select:none;-webkit-user-select:none; overscroll-behavior:none;
+}
+.screen{display:none;flex:1;flex-direction:column;min-height:0}
+.screen.show{display:flex}
+button{font-family:inherit;cursor:pointer}
+button:disabled{opacity:.38;cursor:default}
+h1{font-size:20px;letter-spacing:6px;text-align:center;font-weight:normal}
+.sub{font-size:11px;color:var(--moon-dim);text-align:center;letter-spacing:2px}
+
+/* ===== 角色選擇 ===== */
+#sel-wrap{flex:1;overflow-y:auto;padding:18px 16px}
+#slots{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.slot{position:relative;min-height:96px;padding:12px 10px;text-align:center;background:var(--night-3);border:1px solid var(--line);color:var(--moon)}
+.slot:active{transform:translateY(1px)}
+.slot .ic{font-size:24px}
+.slot .nm{font-size:14px;margin-top:4px}
+.slot .info{font-size:11px;color:var(--moon-dim);margin-top:2px}
+.slot.empty{color:var(--moon-dim);border-style:dashed}
+.slot .del{position:absolute;top:4px;right:4px;font-size:10px;color:var(--moon-dim);background:transparent;border:1px solid var(--line);padding:2px 6px}
+#sel-foot{display:flex;gap:6px;padding:10px 16px;border-top:1px solid var(--line);background:var(--night-2);font-size:11px}
+#sel-foot button{background:transparent;border:1px solid var(--line);color:var(--moon-dim);padding:6px 10px;font-size:11px}
+#sel-foot .spacer{flex:1}
+
+/* ===== 角色創建 ===== */
+#create-wrap{flex:1;overflow-y:auto;padding:14px 16px 8px}
+.step-title{font-size:13px;letter-spacing:3px;color:var(--moon-dim);margin:14px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+#race-grid,#class-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.pick{padding:10px 4px 8px;text-align:center;background:var(--night-3);border:1px solid var(--line);color:var(--moon);font-size:12px}
+.pick .ic{font-size:22px;display:block;margin-bottom:3px}
+.pick.on{border-color:var(--ember);background:#26301f}
+.pick.locked{opacity:.28}
+#pick-desc{min-height:58px;margin-top:10px;padding:10px 12px;font-size:12px;line-height:1.7;color:var(--moon-dim);background:var(--night-2);border:1px solid var(--line)}
+#pick-desc b{color:var(--moon)}
+#name-row{display:flex;gap:8px;margin-top:10px}
+#name-input{flex:1;background:var(--night-2);border:1px solid var(--line);color:var(--moon);font-family:inherit;font-size:15px;padding:10px 12px;outline:none}
+#name-input:focus{border-color:var(--ember)}
+#create-foot{display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--line);background:var(--night-2)}
+#create-foot button{flex:1;padding:12px;font-size:14px;background:var(--night-3);border:1px solid var(--line);color:var(--moon)}
+#btn-confirm-create{border-color:#3a5244}
+
+/* ===== 遊戲畫面 ===== */
+#top{padding:10px 14px 8px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#101a14,var(--night))}
+#title-row{display:flex;justify-content:space-between;align-items:baseline}
+#zone-name{font-size:13px;letter-spacing:3px;color:var(--moon-dim)}
+#char-name{font-size:13px;color:var(--moon)}
+.bar{position:relative;height:16px;background:#0a0f0c;border:1px solid var(--line);margin-top:6px;overflow:hidden}
+.bar .fill{position:absolute;inset:0;transform-origin:left;transition:transform .25s ease}
+#hp-fill{background:linear-gradient(90deg,#7a3227,var(--blood))}
+#hp-bar.low{animation:lowhp 1s infinite}
+@keyframes lowhp{50%{border-color:var(--blood);box-shadow:0 0 8px rgba(200,80,60,.4)}}
+#res-fill{background:linear-gradient(90deg,#8a4d1e,var(--ember))}
+.bar .txt{position:relative;z-index:1;font-size:11px;line-height:15px;text-align:center;color:var(--pale);font-family:ui-monospace,Menlo,monospace;text-shadow:0 1px 2px #000}
+#xp-row{display:flex;gap:8px;align-items:center;margin-top:6px;font-size:11px;color:var(--moon-dim)}
+#xp-bar{flex:1;height:4px;background:#0a0f0c;border:1px solid var(--line);position:relative}
+#xp-fill{position:absolute;inset:0;background:#b8a25a;transform-origin:left;transition:transform .3s}
+
+#stage{
+  flex:1;min-height:180px;position:relative;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;padding:14px;
+  transition:background 1s;
+}
+#stage.zone-slope{background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(95,143,106,.10),transparent 60%),var(--night)}
+#stage.zone-mill{background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(216,180,90,.09),transparent 60%),#100f0b}
+#stage.zone-pine{background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(90,142,200,.09),transparent 60%),#0a0e13}
+#stage.zone-village{background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(224,136,64,.10),transparent 60%),#120f0a}
+#stage.camping{background:radial-gradient(ellipse 70% 50% at 50% 80%,rgba(224,136,64,.14),transparent 60%),#0d0f0c}
+#stage.shake{animation:sshake .22s linear}
+@keyframes sshake{20%{transform:translate(-5px,2px)}40%{transform:translate(5px,-2px)}60%{transform:translate(-4px,-1px)}80%{transform:translate(3px,1px)}}
+#stage.flash::after{content:"";position:absolute;inset:0;background:rgba(245,238,218,.10);animation:ff .18s forwards;pointer-events:none}
+@keyframes ff{to{opacity:0}}
+#scene-caption{font-size:13px;color:var(--moon-dim);letter-spacing:2px;text-align:center;min-height:20px}
+#enemies{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;min-height:110px;align-items:center}
+#village-grid{display:none;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:480px}
+#village-grid.show{display:grid}
+.bld{padding:14px 6px 10px;text-align:center;background:var(--night-3);border:1px solid var(--line);color:var(--moon);font-size:13px;position:relative}
+.bld .ic{font-size:26px;display:block;margin-bottom:4px}
+.bld .who{font-size:10px;color:var(--moon-dim);margin-top:2px}
+.bld .dot{position:absolute;top:6px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--gold);display:none;box-shadow:0 0 6px var(--gold)}
+.bld .dot.show{display:block}
+.mob{width:110px;padding:10px 8px;text-align:center;background:var(--night-3);border:1px solid var(--line);cursor:pointer;position:relative;transition:border-color .15s}
+.mob.big{width:126px}
+.mob.elite{border-color:var(--gold);box-shadow:0 0 14px rgba(216,180,90,.25)}
+.mob.target{border-color:var(--ember)}
+.mob.hit{animation:mshake .18s linear}
+.mob.hitflash .icon{animation:hflash .15s}
+@keyframes hflash{50%{filter:brightness(3)}}
+.mob.casting{border-color:var(--pale);box-shadow:0 0 12px rgba(245,238,218,.18)}
+.mob.enrage{border-color:var(--blood);box-shadow:0 0 12px rgba(200,80,60,.35)}
+.mob.dying{animation:die .5s forwards;pointer-events:none}
+@keyframes die{to{opacity:0;transform:translateY(14px) rotate(8deg)}}
+@keyframes mshake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.mob .icon{font-size:28px;line-height:1.2;display:inline-block;transition:transform .1s}
+.mob .nm{font-size:12px;margin-top:2px}
+.mob .lv{font-size:10px;color:var(--moon-dim)}
+.mob .hp{height:6px;background:#0a0f0c;border:1px solid var(--line);margin-top:6px;position:relative;overflow:hidden}
+.mob .hp i{position:absolute;inset:0;background:var(--blood);transform-origin:left;transition:transform .2s}
+.mob .cast{height:4px;background:#0a0f0c;margin-top:3px;position:relative;overflow:hidden;visibility:hidden}
+.mob .cast i{position:absolute;inset:0;background:var(--pale);transform-origin:left}
+.mob .tag{position:absolute;top:-8px;right:-6px;font-size:10px;background:var(--blood);color:var(--pale);padding:1px 5px;display:none}
+.float-dmg{position:absolute;font-family:ui-monospace,Menlo,monospace;font-weight:bold;pointer-events:none;z-index:5;text-shadow:0 1px 3px #000;animation:rise .9s ease-out forwards}
+.float-dmg.crit{font-size:24px;color:var(--pale);animation:critrise 1s ease-out forwards}
+.float-dmg.normal{font-size:16px;color:#e8b090}
+.float-dmg.taken{font-size:16px;color:var(--blood)}
+.float-dmg.heal{font-size:15px;color:var(--leaf)}
+@keyframes rise{0%{opacity:1;transform:translateY(0) scale(1.25)}18%{transform:translateY(-8px) scale(1)}100%{opacity:0;transform:translateY(-50px) scale(.9)}}
+@keyframes critrise{0%{opacity:1;transform:translateY(0) scale(1.7)}20%{transform:translateY(-10px) scale(1.15)}100%{opacity:0;transform:translateY(-58px) scale(1)}}
+#player-zone{display:flex;align-items:center;gap:10px;margin-top:4px}
+#player-avatar{font-size:32px;transition:transform .12s;display:inline-block}
+#player-avatar.lunge{transform:translateY(-6px) scale(1.12)}
+#player-avatar.hit{animation:mshake .18s linear}
+#player-state{font-size:12px;color:var(--moon-dim);min-width:80px}
+#lvlup{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;z-index:8;pointer-events:none}
+#lvlup.show{display:flex;animation:lvl 2.2s forwards}
+#lvlup .big{font-size:30px;letter-spacing:8px;color:var(--gold);text-shadow:0 0 24px rgba(216,180,90,.8)}
+#lvlup .small{font-size:13px;color:var(--pale);margin-top:6px}
+@keyframes lvl{0%{opacity:0;transform:scale(.7)}12%{opacity:1;transform:scale(1.06)}20%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
+
+#actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 14px 6px;border-top:1px solid var(--line);background:var(--night-2)}
+.skill{position:relative;padding:10px 4px 8px;text-align:center;background:var(--night-3);border:1px solid var(--line);color:var(--moon);font-size:14px;overflow:hidden;transition:border-color .15s}
+.skill:active{transform:translateY(1px)}
+.skill.pressed{animation:sp .25s}
+@keyframes sp{0%{background:#3a4a34}100%{background:var(--night-3)}}
+.skill .cost{display:block;font-size:10px;color:var(--ember);margin-top:3px}
+.skill .key{position:absolute;top:2px;left:5px;font-size:10px;color:var(--moon-dim);font-family:ui-monospace,monospace}
+.skill.on{border-color:var(--ember);background:#26301f}
+.skill .cd{position:absolute;left:0;bottom:0;height:3px;background:var(--pale);transform-origin:left}
+#sub-actions{display:grid;grid-template-columns:1.1fr 1fr 1fr 1fr 1fr;gap:6px;padding:6px 14px 10px;background:var(--night-2)}
+.act{padding:9px 2px;text-align:center;background:transparent;border:1px solid var(--line);color:var(--moon-dim);font-size:12px}
+.act:active{transform:translateY(1px)}
+.act.primary{color:var(--moon);border-color:#3a5244}
+.act.on{color:var(--ember);border-color:var(--ember)}
+#log-wrap{border-top:1px solid var(--line);background:var(--night)}
+#log{height:104px;overflow-y:auto;padding:8px 14px;font-size:12px;line-height:1.75;color:var(--moon-dim)}
+#log .me{color:#d8b98a} #log .dmg{color:#d98a7a} #log .crit{color:var(--pale)}
+#log .sys{color:#7a927f} #log .loot{color:#b8a25a} #log .warn{color:var(--blood)} #log .gold{color:var(--gold)} #log .npc{color:#a8c8b0} #log .prof{color:#8fb8c8}
+#foot{display:flex;gap:6px;padding:8px 14px;border-top:1px solid var(--line);background:var(--night-2);font-size:11px;flex-wrap:wrap}
+#foot button{background:transparent;border:1px solid var(--line);color:var(--moon-dim);padding:5px 9px;font-size:11px}
+#foot .spacer{flex:1}
+.panel{position:fixed;inset:0;background:rgba(6,10,8,.93);z-index:20;display:none;flex-direction:column;padding:20px 16px;max-width:760px;margin:0 auto}
+.panel.show{display:flex}
+.panel h2{font-size:15px;letter-spacing:3px;color:var(--moon);border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:12px;font-weight:normal}
+.panel .body{flex:1;overflow-y:auto;font-size:13px;line-height:2}
+.panel .close{margin-top:12px;padding:10px;background:var(--night-3);border:1px solid var(--line);color:var(--moon);font-size:14px}
+.stat-row{display:flex;justify-content:space-between;border-bottom:1px dashed var(--line);padding:2px 0;align-items:center;gap:8px}
+.stat-row b{color:var(--moon);font-weight:normal}
+.stat-row .mini{font-size:11px;padding:3px 8px;background:var(--night-3);border:1px solid var(--line);color:var(--moon);white-space:nowrap}
+.ok{color:var(--leaf)} .ng{color:var(--blood)}
+.zone-card{display:block;width:100%;text-align:left;padding:12px;margin-bottom:8px;background:var(--night-3);border:1px solid var(--line);color:var(--moon);font-size:13px}
+.zone-card.on{border-color:var(--ember)}
+.zone-card.locked{opacity:.4}
+.zone-card .zd{font-size:11px;color:var(--moon-dim);margin-top:2px;line-height:1.6}
+.npc-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.npc-head .face{font-size:36px}
+.npc-head .say{font-size:13px;color:var(--moon-dim);line-height:1.7;font-style:italic}
+.q-item{padding:10px 12px;margin-bottom:8px;background:var(--night-2);border:1px solid var(--line)}
+.q-item .qn{color:var(--gold);font-size:13px}
+.q-item .qc{font-size:12px;color:var(--moon-dim);line-height:1.7;margin:4px 0}
+.q-item .qp{font-size:12px;color:var(--moon)}
+.q-item.done-forever{opacity:.45}
+.prof-bar{height:6px;background:#0a0f0c;border:1px solid var(--line);position:relative;overflow:hidden;margin:4px 0 8px}
+.prof-bar i{position:absolute;inset:0;background:#8fb8c8;transform-origin:left}
+@media(min-width:640px){#log{height:150px}#slots{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+
+<!-- ============ 角色選擇 ============ -->
+<div class="screen show" id="scr-select">
+  <div id="sel-wrap">
+    <h1>永恆傳承</h1>
+    <div class="sub">ETERNAL LEGACY · M0 原型 v0.7</div>
+    <div id="slots"></div>
+  </div>
+  <div id="sel-foot">
+    <button id="btn-export-acc">匯出帳號</button>
+    <button id="btn-import-acc">匯入帳號</button>
+    <input type="file" id="import-file" accept=".json" style="display:none">
+    <span class="spacer"></span>
+    <span style="color:var(--moon-dim);align-self:center">8 個角色欄位 · 跨裝置以匯出/匯入接續</span>
+  </div>
+</div>
+
+<!-- ============ 角色創建 ============ -->
+<div class="screen" id="scr-create">
+  <div id="create-wrap">
+    <h1 style="font-size:16px">創建角色</h1>
+    <div class="step-title">一、選擇種族</div>
+    <div id="race-grid"></div>
+    <div class="step-title">二、選擇職業</div>
+    <div id="class-grid"></div>
+    <div id="pick-desc">選擇一個種族開始。</div>
+    <div class="step-title">三、命名</div>
+    <div id="name-row"><input id="name-input" maxlength="8" placeholder="輸入名字（最多 8 字）"></div>
+  </div>
+  <div id="create-foot">
+    <button id="btn-cancel-create">返回</button>
+    <button id="btn-confirm-create" disabled>踏入世界</button>
+  </div>
+</div>
+
+<!-- ============ 遊戲 ============ -->
+<div class="screen" id="scr-game">
+  <div id="top">
+    <div id="title-row">
+      <span id="zone-name">月松林 · 溪畔村</span>
+      <span id="char-name"></span>
+    </div>
+    <div class="bar" id="hp-bar"><div class="fill" id="hp-fill"></div><div class="txt" id="hp-txt"></div></div>
+    <div class="bar"><div class="fill" id="res-fill"></div><div class="txt" id="res-txt"></div></div>
+    <div id="xp-row"><span>經驗</span><div id="xp-bar"><div id="xp-fill"></div></div><span id="xp-txt"></span></div>
+  </div>
+  <div id="stage" class="zone-village">
+    <div id="lvlup"><div class="big" id="lvlup-t">升 級</div><div class="small" id="lvlup-s"></div></div>
+    <div id="scene-caption">溪畔村的火堆劈啪作響。</div>
+    <div id="village-grid"></div>
+    <div id="enemies"></div>
+    <div id="player-zone">
+      <span id="player-avatar">🗡️</span>
+      <span id="player-state"></span>
+    </div>
+  </div>
+  <div id="actions">
+    <button class="skill" id="sk1"><span class="key">1</span><span id="sk1-name"></span><span class="cost" id="sk1-cost"></span></button>
+    <button class="skill" id="sk2"><span class="key">2</span><span id="sk2-name"></span><span class="cost">切換</span></button>
+    <button class="skill" id="sk3"><span class="key">3</span><span id="sk3-name"></span><span class="cost" id="sk3-cost"></span><div class="cd" id="sk3cd" style="transform:scaleX(0)"></div></button>
+  </div>
+  <div id="sub-actions">
+    <button class="act primary" id="btn-explore">探索</button>
+    <button class="act" id="btn-auto">⚔ 自動</button>
+    <button class="act" id="btn-camp">⛺ 紮營</button>
+    <button class="act" id="btn-eat">進食</button>
+    <button class="act" id="btn-4">採集</button>
+  </div>
+  <div id="log-wrap"><div id="log"></div></div>
+  <div id="foot">
+    <button id="btn-bag">背包</button>
+    <button id="btn-quest">任務</button>
+    <button id="btn-profs">專業</button>
+    <button id="btn-zone2">地圖</button>
+    <button id="btn-stats">統計</button>
+    <button id="btn-sound">🔊</button>
+    <span class="spacer"></span>
+    <button id="btn-logout">登出</button>
+  </div>
+</div>
+
+<div class="panel" id="panel-bag">
+  <h2>背包</h2><div class="body" id="bag-body"></div>
+  <button class="close" data-close="panel-bag">關閉</button>
+</div>
+<div class="panel" id="panel-stats">
+  <h2>M0 驗收統計</h2><div class="body" id="stats-body"></div>
+  <button class="close" data-close="panel-stats">關閉</button>
+</div>
+<div class="panel" id="panel-zone">
+  <h2>前往何處</h2><div class="body" id="zone-body"></div>
+  <button class="close" data-close="panel-zone">關閉</button>
+</div>
+<div class="panel" id="panel-npc">
+  <h2 id="npc-title">建築</h2><div class="body" id="npc-body"></div>
+  <button class="close" data-close="panel-npc">離開</button>
+</div>
+<div class="panel" id="panel-quest">
+  <h2>任務日誌</h2><div class="body" id="quest-body"></div>
+  <button class="close" data-close="panel-quest">關閉</button>
+</div>
+<div class="panel" id="panel-profs">
+  <h2>專業技能</h2><div class="body" id="profs-body"></div>
+  <button class="close" data-close="panel-profs">關閉</button>
+</div>
+
+<!-- ============================================================
+     資料層(GDB 增補一 §10 / 計畫書 Roadmap 第二步)
+     四張資料表:curves / stats / items / world
+     單一真值來源:引擎與(未來的)開放百科同源讀取
+     內容修改只動資料表,不動引擎
+     ============================================================ -->
+<script type="application/json" id="tbl-curves">
+{
+ "meta": {
+  "source": "GDB v0.8 + GDB增補一 品質與五屬性系統 v1.0",
+  "note": "proto=M0 現行常數(v0.6 行為保真);canon60=60級擴展鎖定曲線,後續版本引擎與百科同源讀取"
+ },
+ "proto": {
+  "tick": 100,
+  "saveKey": "eternal_legacy_acc",
+  "slots": 8,
+  "profCap": 75,
+  "primaryMax": 2,
+  "campTickSec": 20,
+  "offlineEff": 0.5,
+  "offlineCapH": 8,
+  "cfg": {
+   "player": {
+    "hpBase": 70,
+    "hpPerLv": 8,
+    "atkMin": 6,
+    "atkMax": 9,
+    "atkPerLv": 1,
+    "atkSpeed": 2.4,
+    "crit": 0.05,
+    "armorBase": 15,
+    "armorPerLv": 3,
+    "regenOOC": 0.5,
+    "xpPerLv": 400
+   },
+   "resource": {
+    "rage": {
+     "max": 100,
+     "label": "怒氣",
+     "color": "linear-gradient(90deg,#8a4d1e,#e08840)",
+     "perHit": 8,
+     "perTaken": 5,
+     "combatOnly": true
+    },
+    "energy": {
+     "max": 100,
+     "label": "能量",
+     "color": "linear-gradient(90deg,#8a7a2a,#d8c04a)",
+     "regen": 10
+    },
+    "mana": {
+     "max": 100,
+     "label": "法力",
+     "color": "linear-gradient(90deg,#2f5378,#5a8ec8)",
+     "regenIn": 3,
+     "regenOut": 6
+    }
+   },
+   "stanceDmg": 0.75,
+   "stanceRes": 0.75,
+   "sk3": {
+    "cd": 8,
+    "execTh": 0.2,
+    "execMult": 1.5
+   },
+   "eatDur": 10,
+   "restCost": 8,
+   "repairRate": 0.3,
+   "gatherCD": 10,
+   "fishCD": 5,
+   "bandCD": 12,
+   "learnCost": 10,
+   "armorK": 200
+  }
+ },
+ "canon60": {
+  "note": "GDB增補一 v1.0 全部鎖定值",
+  "manualDps": {
+   "lin": 5.25,
+   "const": 10
+  },
+  "idleEff": 0.8,
+  "bodyDps": {
+   "lin": 3.15,
+   "const": 6
+  },
+  "greenGearDps": {
+   "lin": 2.1,
+   "const": 4
+  },
+  "weaponShare": 0.65,
+  "weaponDpsGreen": {
+   "lin": 1.365,
+   "const": 2.6
+  },
+  "rounding": "half-up",
+  "gearMult": {
+   "green": 1,
+   "blue": 1.12,
+   "purple": 1.25
+  },
+  "curvePct": {
+   "green": 1,
+   "blue": 1.048,
+   "purple": 1.1
+  },
+  "qC": {
+   "green": 1.1,
+   "blue": 1.25,
+   "purple": 1.4
+  },
+  "qualityColor": {
+   "white": "#e8e2cf",
+   "green": "#5f8f6a",
+   "blue": "#5a8ec8",
+   "purple": "#a86ee0"
+  },
+  "attr": {
+   "apPerMainStat": 2,
+   "apPerDps": 2,
+   "effIlvlOffset": -2,
+   "mainShareMid": 0.475,
+   "share": {
+    "main": [
+     0.4,
+     0.55
+    ],
+    "sta": [
+     0.25,
+     0.4
+    ],
+    "sub": [
+     0,
+     0.25
+    ]
+   },
+   "perPoint": {
+    "str": "每2點=每擊攻擊力+1(物理)",
+    "agi": "每20點=爆擊+1%、閃避+1%",
+    "sta": "每1點=+5 HP",
+    "int": "每2點=法攻+1;每1點=法力上限+2",
+    "spi": "脫戰回復+0.3/秒;法系另得戰鬥法力+0.1/秒"
+   }
+  },
+  "slotWeight": {
+   "weapon": 1,
+   "chest": 1,
+   "legs": 0.9,
+   "head": 0.85,
+   "shoulder": 0.7,
+   "feet": 0.7,
+   "offhand": 0.6,
+   "ring": 0.55,
+   "trinket": 0.55
+  },
+  "armor": {
+   "drPerLvl": 40,
+   "drConst": 200,
+   "perIlvl": 2,
+   "mat": {
+    "cloth": 1,
+    "leather": 1.4,
+    "mail": 1.8,
+    "plate": 2.2
+   },
+   "qMult": {
+    "green": 1,
+    "blue": 1.1,
+    "purple": 1.2
+   }
+  },
+  "bodyHp": {
+   "lin": 8,
+   "const": 62
+  },
+  "refHp": [
+   [
+    10,
+    245
+   ],
+   [
+    30,
+    662
+   ],
+   [
+    60,
+    1289
+   ]
+  ],
+  "deviation": "Lv15-60 總曲線偏差≤3%;Lv10-14 以實測表調校怪物HP"
+ }
+}
+</script>
+<script type="application/json" id="tbl-stats">
+{
+ "races": {
+  "dawn": {
+   "name": "曙原人",
+   "icon": "🌅",
+   "proto": "平原的開拓者",
+   "trait": "適應力：經驗+5%、全專業熟練+5",
+   "mods": {
+    "xp": 1.05
+   },
+   "profBonus": {
+    "*": 5
+   },
+   "lore": "曙光平原的墾荒民族，什麼都學得快——這正是他們走得最遠的原因。"
+  },
+  "stone": {
+   "name": "岩鬚族",
+   "icon": "⛏️",
+   "proto": "山嶺的鑿石者",
+   "trait": "山嶺之軀：生命+10%、採礦/鍛造熟練+15",
+   "mods": {
+    "hp": 1.1
+   },
+   "profBonus": {
+    "mine": 15,
+    "smith": 15
+   },
+   "lore": "居於群山腹地的矮壯民族，鬍鬚裡藏著礦脈的秘密，骨頭比花崗岩還硬。"
+  },
+  "moon": {
+   "name": "月裔",
+   "icon": "🌙",
+   "proto": "林間的守夜人",
+   "trait": "月之銳目：爆擊+2%、剝皮熟練+10",
+   "mods": {
+    "crit": 0.02
+   },
+   "profBonus": {
+    "skin": 10
+   },
+   "lore": "月松林最古老的居民，看得清落針，也看得清獸皮下刀的紋理。"
+  },
+  "spark": {
+   "name": "燧巧族",
+   "icon": "⚙️",
+   "proto": "火花的發明家",
+   "trait": "急智：爆發技CD−1秒、工程熟練+15",
+   "mods": {
+    "cdr": 1
+   },
+   "profBonus": {
+    "eng": 15
+   },
+   "lore": "個頭最小、點子最多。他們相信任何問題都有機關解，包括戰鬥。"
+  },
+  "tusk": {
+   "name": "獠原氏族",
+   "icon": "🪓",
+   "proto": "荒原的戰吼者",
+   "trait": "血性：攻擊+8%、製皮熟練+10",
+   "mods": {
+    "atk": 1.08
+   },
+   "profBonus": {
+    "leather": 10
+   },
+   "lore": "荒原上以戰立誓的氏族，獸皮戰袍是他們的第二層皮膚。"
+  },
+  "mire": {
+   "name": "沼影族",
+   "icon": "🐍",
+   "proto": "迷沼的行者",
+   "trait": "再生：脫戰回復×2、煉藥熟練+10",
+   "mods": {
+    "regen": 2
+   },
+   "profBonus": {
+    "alch": 10
+   },
+   "lore": "迷霧沼澤的高瘦獵者，巫醫的藥鍋從不熄火。"
+  },
+  "horn": {
+   "name": "巨角族",
+   "icon": "🐂",
+   "proto": "曠野的守望者",
+   "trait": "不動如山：生命+15%攻擊−5%、採藥熟練+15",
+   "mods": {
+    "hp": 1.15,
+    "atk": 0.95
+   },
+   "profBonus": {
+    "herb": 15
+   },
+   "lore": "曠野的巨人，崇敬大地。大地也回報他們：藥草在他們掌中格外聽話。"
+  },
+  "bound": {
+   "name": "縛靈族",
+   "icon": "💀",
+   "proto": "歸來的不眠者",
+   "trait": "不眠意志：資源+15%、附魔熟練+10",
+   "mods": {
+    "res": 1.15
+   },
+   "profBonus": {
+    "ench": 10
+   },
+   "lore": "從死亡邊界被縛回的靈魂，對物品殘留的魔力格外敏感。"
+  }
+ },
+ "classes": {
+  "squire": {
+   "name": "劍士",
+   "icon": "🗡️",
+   "res": "rage",
+   "weapon": "新手短劍",
+   "auto": "揮劍",
+   "role": "近戰 · 均衡",
+   "sk1": {
+    "name": "英勇打擊",
+    "cost": 15,
+    "kind": "prime",
+    "bonus": 8,
+    "desc": "下一次攻擊 +8 傷害"
+   },
+   "sk2": {
+    "name": "格擋姿態",
+    "armor": 30,
+    "desc": "護甲+30，輸出與資源−25%"
+   },
+   "sk3": {
+    "name": "破空斬",
+    "cost": 30,
+    "min": 12,
+    "max": 16,
+    "desc": "立即重擊；可打斷施法"
+   }
+  },
+  "vow": {
+   "name": "聖衛",
+   "icon": "✨",
+   "res": "mana",
+   "weapon": "新手鐵鎚",
+   "auto": "揮鎚",
+   "role": "近戰 · 韌性",
+   "sk1": {
+    "name": "聖光斬",
+    "cost": 15,
+    "kind": "instant",
+    "dmg": [
+     7,
+     9
+    ],
+    "heal": 4,
+    "desc": "造成傷害並回復 4 HP"
+   },
+   "sk2": {
+    "name": "庇護姿態",
+    "armor": 35,
+    "desc": "護甲+35，輸出與資源−25%"
+   },
+   "sk3": {
+    "name": "制裁之鎚",
+    "cost": 30,
+    "min": 11,
+    "max": 15,
+    "desc": "神聖重擊；可打斷施法"
+   }
+  },
+  "ranger": {
+   "name": "遊俠",
+   "icon": "🏹",
+   "res": "mana",
+   "weapon": "新手短弓",
+   "auto": "放箭",
+   "role": "遠程 · 精準",
+   "sk1": {
+    "name": "瞄準射擊",
+    "cost": 15,
+    "kind": "instant",
+    "dmg": [
+     8,
+     11
+    ],
+    "desc": "精準一箭"
+   },
+   "sk2": {
+    "name": "蛇行步",
+    "armor": 25,
+    "desc": "護甲+25，輸出與資源−25%"
+   },
+   "sk3": {
+    "name": "穿雲箭",
+    "cost": 30,
+    "min": 12,
+    "max": 16,
+    "desc": "貫穿重箭；可打斷施法"
+   }
+  },
+  "shade": {
+   "name": "影刃",
+   "icon": "🔪",
+   "res": "energy",
+   "weapon": "新手匕首",
+   "auto": "疾刺",
+   "role": "近戰 · 爆發",
+   "sk1": {
+    "name": "影襲",
+    "cost": 35,
+    "kind": "instant",
+    "dmg": [
+     9,
+     12
+    ],
+    "desc": "自陰影中突刺"
+   },
+   "sk2": {
+    "name": "殘影身法",
+    "armor": 25,
+    "desc": "護甲+25，輸出與資源−25%"
+   },
+   "sk3": {
+    "name": "絕命刺",
+    "cost": 60,
+    "min": 13,
+    "max": 17,
+    "desc": "致命一擊；可打斷施法"
+   }
+  },
+  "friar": {
+   "name": "修士",
+   "icon": "📿",
+   "res": "mana",
+   "weapon": "新手法杖",
+   "auto": "聖光彈",
+   "role": "遠程 · 續戰",
+   "sk1": {
+    "name": "懲擊",
+    "cost": 15,
+    "kind": "instant",
+    "dmg": [
+     7,
+     9
+    ],
+    "heal": 4,
+    "desc": "造成傷害並回復 4 HP"
+   },
+   "sk2": {
+    "name": "真言之盾",
+    "armor": 35,
+    "desc": "護甲+35，輸出與資源−25%"
+   },
+   "sk3": {
+    "name": "淨化之光",
+    "cost": 30,
+    "min": 11,
+    "max": 15,
+    "desc": "聖光爆發；可打斷施法"
+   }
+  },
+  "arcan": {
+   "name": "秘法師",
+   "icon": "🔮",
+   "res": "mana",
+   "weapon": "新手魔杖",
+   "auto": "秘法飛彈",
+   "role": "遠程 · 高傷",
+   "sk1": {
+    "name": "火焰箭",
+    "cost": 15,
+    "kind": "instant",
+    "dmg": [
+     9,
+     12
+    ],
+    "desc": "灼熱的火矢"
+   },
+   "sk2": {
+    "name": "寒冰護體",
+    "armor": 30,
+    "desc": "護甲+30，輸出與資源−25%"
+   },
+   "sk3": {
+    "name": "炎爆術",
+    "cost": 30,
+    "min": 13,
+    "max": 18,
+    "desc": "爆裂火球；可打斷施法"
+   }
+  },
+  "hex": {
+   "name": "咒術師",
+   "icon": "🕯️",
+   "res": "mana",
+   "weapon": "新手咒杖",
+   "auto": "暗影箭",
+   "role": "遠程 · 汲取",
+   "sk1": {
+    "name": "腐蝕之觸",
+    "cost": 15,
+    "kind": "instant",
+    "dmg": [
+     8,
+     10
+    ],
+    "desc": "侵蝕性的暗影"
+   },
+   "sk2": {
+    "name": "汲魂儀式",
+    "armor": 10,
+    "lifesteal": 0.25,
+    "desc": "護甲+10，攻擊吸取 25% 傷害為生命，輸出−25%"
+   },
+   "sk3": {
+    "name": "獻祭爆裂",
+    "cost": 30,
+    "min": 12,
+    "max": 16,
+    "desc": "黑焰爆發；可打斷施法"
+   }
+  },
+  "spirit": {
+   "name": "靈語者",
+   "icon": "🌿",
+   "res": "mana",
+   "weapon": "新手圖騰杖",
+   "auto": "雷擊",
+   "role": "遠程 · 大地",
+   "sk1": {
+    "name": "閃電箭",
+    "cost": 15,
+    "kind": "instant",
+    "dmg": [
+     8,
+     11
+    ],
+    "desc": "呼喚天雷"
+   },
+   "sk2": {
+    "name": "大地之膚",
+    "armor": 35,
+    "desc": "護甲+35，輸出與資源−25%"
+   },
+   "sk3": {
+    "name": "先祖之怒",
+    "cost": 30,
+    "min": 12,
+    "max": 16,
+    "desc": "先祖顯靈重擊；可打斷施法"
+   }
+  }
+ },
+ "raceClasses": {
+  "dawn": [
+   "squire",
+   "vow",
+   "shade",
+   "friar",
+   "arcan",
+   "hex"
+  ],
+  "stone": [
+   "squire",
+   "vow",
+   "ranger",
+   "friar",
+   "spirit"
+  ],
+  "moon": [
+   "squire",
+   "ranger",
+   "shade",
+   "friar",
+   "arcan"
+  ],
+  "spark": [
+   "squire",
+   "shade",
+   "arcan",
+   "hex"
+  ],
+  "tusk": [
+   "squire",
+   "ranger",
+   "shade",
+   "hex",
+   "spirit"
+  ],
+  "mire": [
+   "squire",
+   "ranger",
+   "shade",
+   "friar",
+   "arcan",
+   "spirit"
+  ],
+  "horn": [
+   "squire",
+   "ranger",
+   "vow",
+   "spirit"
+  ],
+  "bound": [
+   "squire",
+   "shade",
+   "friar",
+   "arcan",
+   "hex"
+  ]
+ },
+ "profs": {
+  "mine": {
+   "name": "採礦",
+   "icon": "⛏️",
+   "tier": "primary",
+   "kind": "採集",
+   "desc": "在野外開採礦石，並可熔煉成金屬錠（鍛造/工程的材料）。"
+  },
+  "herb": {
+   "name": "採藥",
+   "icon": "🌿",
+   "tier": "primary",
+   "kind": "採集",
+   "desc": "採集各獵場的藥草（煉藥材料）；紮營時也會累積。"
+  },
+  "skin": {
+   "name": "剝皮",
+   "icon": "🔪",
+   "tier": "primary",
+   "kind": "採集",
+   "desc": "擊殺野獸後額外剝取獸皮（製皮材料）；紮營時也會累積。"
+  },
+  "alch": {
+   "name": "煉藥",
+   "icon": "⚗️",
+   "tier": "primary",
+   "kind": "製造",
+   "desc": "將藥草熬成治療藥水（戰鬥中可喝）。"
+  },
+  "smith": {
+   "name": "鍛造",
+   "icon": "🔨",
+   "tier": "primary",
+   "kind": "製造",
+   "desc": "以金屬錠打造武器與板甲。"
+  },
+  "leather": {
+   "name": "製皮",
+   "icon": "🧵",
+   "tier": "primary",
+   "kind": "製造",
+   "desc": "將獸皮鞣製成皮甲。"
+  },
+  "tailor": {
+   "name": "裁縫",
+   "icon": "🪡",
+   "tier": "primary",
+   "kind": "製造",
+   "desc": "以亞麻布縫製布甲（布料可自獵物窩巢拾得或向阿滿購買）。"
+  },
+  "ench": {
+   "name": "附魔",
+   "icon": "✨",
+   "tier": "primary",
+   "kind": "製造",
+   "desc": "分解裝備取得奇異之塵，為當前裝備附上恆久強化（換裝即失效，忠於經典）。"
+  },
+  "eng": {
+   "name": "工程",
+   "icon": "⚙️",
+   "tier": "primary",
+   "kind": "製造",
+   "desc": "以金屬錠製作炸彈等小玩意（戰鬥中可用）。"
+  },
+  "cook": {
+   "name": "烹飪",
+   "icon": "🍳",
+   "tier": "secondary",
+   "kind": "次要",
+   "desc": "把生肉烤成熟食，回復量大增。需要火源（村莊或營地）。"
+  },
+  "fish": {
+   "name": "釣魚",
+   "icon": "🎣",
+   "tier": "secondary",
+   "kind": "次要",
+   "desc": "在溪畔碼頭垂釣。魚可以烤來吃。"
+  },
+  "aid": {
+   "name": "急救",
+   "icon": "🩹",
+   "tier": "secondary",
+   "kind": "次要",
+   "desc": "用亞麻布捲繃帶，戰鬥中也能包紮（冷卻 12 秒）。"
+  }
+ },
+ "profOrder": [
+  "mine",
+  "herb",
+  "skin",
+  "alch",
+  "smith",
+  "leather",
+  "tailor",
+  "ench",
+  "eng",
+  "cook",
+  "fish",
+  "aid"
+ ]
+}
+</script>
+<script type="application/json" id="tbl-items">
+{
+ "items": {
+  "狼肉": {
+   "food": 30,
+   "sell": 4,
+   "buy": 6
+  },
+  "野豬肉": {
+   "food": 45,
+   "sell": 6,
+   "buy": 10
+  },
+  "生鮮溪魚": {
+   "food": 10,
+   "sell": 3
+  },
+  "烤狼排": {
+   "food": 55,
+   "sell": 8
+  },
+  "烤溪魚": {
+   "food": 40,
+   "sell": 6
+  },
+  "香烤野豬排": {
+   "food": 80,
+   "sell": 14
+  },
+  "破損的狼皮": {
+   "sell": 2
+  },
+  "狼牙": {
+   "sell": 3
+  },
+  "完好的狼皮": {
+   "sell": 25
+  },
+  "粗糙的豬皮": {
+   "sell": 3
+  },
+  "彎曲的獠牙": {
+   "sell": 4
+  },
+  "厚實的狼皮": {
+   "sell": 6
+  },
+  "銳利的狼牙": {
+   "sell": 7
+  },
+  "月光草": {
+   "sell": 2,
+   "herb": 1
+  },
+  "野蜂草": {
+   "sell": 4,
+   "herb": 1
+  },
+  "松影蕈": {
+   "sell": 6,
+   "herb": 1
+  },
+  "銅礦石": {
+   "sell": 2,
+   "ore": 1
+  },
+  "錫礦石": {
+   "sell": 4,
+   "ore": 1
+  },
+  "鐵礦石": {
+   "sell": 7,
+   "ore": 1
+  },
+  "銅錠": {
+   "sell": 5
+  },
+  "錫錠": {
+   "sell": 9
+  },
+  "鐵錠": {
+   "sell": 15
+  },
+  "亞麻布": {
+   "sell": 2,
+   "buy": 4
+  },
+  "奇異之塵": {
+   "sell": 8
+  },
+  "淡色治療藥水": {
+   "potion": 35,
+   "sell": 5
+  },
+  "治療藥水": {
+   "potion": 70,
+   "sell": 12
+  },
+  "濃烈治療藥水": {
+   "potion": 120,
+   "sell": 25
+  },
+  "亞麻繃帶": {
+   "band": 25,
+   "sell": 3
+  },
+  "厚亞麻繃帶": {
+   "band": 50,
+   "sell": 7
+  },
+  "銅管炸彈": {
+   "bomb": 30,
+   "sell": 6
+  },
+  "錫殼炸彈": {
+   "bomb": 60,
+   "sell": 14
+  },
+  "鐵殼雷": {
+   "bomb": 100,
+   "stun": 1.5,
+   "sell": 28
+  },
+  "軟皮護肩": {
+   "armorEq": 4
+  },
+  "硬皮背心": {
+   "armorEq": 8
+  },
+  "深林皮甲": {
+   "armorEq": 14
+  },
+  "亞麻護肩": {
+   "armorEq": 3
+  },
+  "亞麻長袍": {
+   "armorEq": 6
+  },
+  "加固長袍": {
+   "armorEq": 12
+  },
+  "銅片護甲": {
+   "armorEq": 10
+  },
+  "獠牙短矛": {
+   "weapon": 2
+  },
+  "灰狼獵刃": {
+   "weapon": 3
+  },
+  "狼王之牙": {
+   "weapon": 5
+  },
+  "粗銅劍": {
+   "weapon": 2
+  },
+  "精鐵刺劍": {
+   "weapon": 4
+  }
+ },
+ "recipes": [
+  {
+   "id": "m1",
+   "prof": "mine",
+   "req": 1,
+   "name": "熔煉銅錠",
+   "mats": {
+    "銅礦石": 2
+   },
+   "out": [
+    "銅錠",
+    1
+   ],
+   "gain": 1
+  },
+  {
+   "id": "m2",
+   "prof": "mine",
+   "req": 20,
+   "name": "熔煉錫錠",
+   "mats": {
+    "錫礦石": 2
+   },
+   "out": [
+    "錫錠",
+    1
+   ],
+   "gain": 1
+  },
+  {
+   "id": "m3",
+   "prof": "mine",
+   "req": 45,
+   "name": "熔煉鐵錠",
+   "mats": {
+    "鐵礦石": 2
+   },
+   "out": [
+    "鐵錠",
+    1
+   ],
+   "gain": 1
+  },
+  {
+   "id": "a1",
+   "prof": "alch",
+   "req": 1,
+   "name": "淡色治療藥水",
+   "mats": {
+    "月光草": 2
+   },
+   "out": [
+    "淡色治療藥水",
+    1
+   ],
+   "gain": 2
+  },
+  {
+   "id": "a2",
+   "prof": "alch",
+   "req": 25,
+   "name": "治療藥水",
+   "mats": {
+    "野蜂草": 2,
+    "月光草": 1
+   },
+   "out": [
+    "治療藥水",
+    1
+   ],
+   "gain": 2
+  },
+  {
+   "id": "a3",
+   "prof": "alch",
+   "req": 50,
+   "name": "濃烈治療藥水",
+   "mats": {
+    "松影蕈": 2,
+    "野蜂草": 1
+   },
+   "out": [
+    "濃烈治療藥水",
+    1
+   ],
+   "gain": 2
+  },
+  {
+   "id": "l1",
+   "prof": "leather",
+   "req": 1,
+   "name": "軟皮護肩",
+   "mats": {
+    "破損的狼皮": 4
+   },
+   "out": [
+    "軟皮護肩",
+    1
+   ],
+   "gain": 3
+  },
+  {
+   "id": "l2",
+   "prof": "leather",
+   "req": 25,
+   "name": "硬皮背心",
+   "mats": {
+    "粗糙的豬皮": 4,
+    "彎曲的獠牙": 2
+   },
+   "out": [
+    "硬皮背心",
+    1
+   ],
+   "gain": 3
+  },
+  {
+   "id": "l3",
+   "prof": "leather",
+   "req": 50,
+   "name": "深林皮甲",
+   "mats": {
+    "厚實的狼皮": 5,
+    "銳利的狼牙": 2
+   },
+   "out": [
+    "深林皮甲",
+    1
+   ],
+   "gain": 3
+  },
+  {
+   "id": "s1",
+   "prof": "smith",
+   "req": 1,
+   "name": "粗銅劍",
+   "mats": {
+    "銅錠": 2
+   },
+   "out": [
+    "粗銅劍",
+    1
+   ],
+   "gain": 3
+  },
+  {
+   "id": "s2",
+   "prof": "smith",
+   "req": 25,
+   "name": "銅片護甲",
+   "mats": {
+    "銅錠": 4
+   },
+   "out": [
+    "銅片護甲",
+    1
+   ],
+   "gain": 3
+  },
+  {
+   "id": "s3",
+   "prof": "smith",
+   "req": 50,
+   "name": "精鐵刺劍",
+   "mats": {
+    "鐵錠": 3
+   },
+   "out": [
+    "精鐵刺劍",
+    1
+   ],
+   "gain": 3
+  },
+  {
+   "id": "t1",
+   "prof": "tailor",
+   "req": 1,
+   "name": "亞麻護肩",
+   "mats": {
+    "亞麻布": 4
+   },
+   "out": [
+    "亞麻護肩",
+    1
+   ],
+   "gain": 3
+  },
+  {
+   "id": "t2",
+   "prof": "tailor",
+   "req": 25,
+   "name": "亞麻長袍",
+   "mats": {
+    "亞麻布": 6
+   },
+   "out": [
+    "亞麻長袍",
+    1
+   ],
+   "gain": 3
+  },
+  {
+   "id": "t3",
+   "prof": "tailor",
+   "req": 50,
+   "name": "加固長袍",
+   "mats": {
+    "亞麻布": 8,
+    "奇異之塵": 1
+   },
+   "out": [
+    "加固長袍",
+    1
+   ],
+   "gain": 3
+  },
+  {
+   "id": "e1",
+   "prof": "ench",
+   "req": 1,
+   "name": "武器附魔·次級打擊",
+   "mats": {
+    "奇異之塵": 2
+   },
+   "ench": {
+    "slot": 0,
+    "val": 1
+   },
+   "gain": 3,
+   "eff": "當前武器攻擊 +1"
+  },
+  {
+   "id": "e2",
+   "prof": "ench",
+   "req": 20,
+   "name": "護甲附魔·次級堅韌",
+   "mats": {
+    "奇異之塵": 2
+   },
+   "ench": {
+    "slot": 1,
+    "val": 3
+   },
+   "gain": 3,
+   "eff": "當前防具護甲 +3"
+  },
+  {
+   "id": "e3",
+   "prof": "ench",
+   "req": 50,
+   "name": "武器附魔·打擊",
+   "mats": {
+    "奇異之塵": 4
+   },
+   "ench": {
+    "slot": 0,
+    "val": 2
+   },
+   "gain": 3,
+   "eff": "當前武器攻擊 +2"
+  },
+  {
+   "id": "g1",
+   "prof": "eng",
+   "req": 1,
+   "name": "銅管炸彈",
+   "mats": {
+    "銅錠": 1,
+    "亞麻布": 1
+   },
+   "out": [
+    "銅管炸彈",
+    1
+   ],
+   "gain": 3
+  },
+  {
+   "id": "g2",
+   "prof": "eng",
+   "req": 25,
+   "name": "錫殼炸彈",
+   "mats": {
+    "錫錠": 1,
+    "亞麻布": 2
+   },
+   "out": [
+    "錫殼炸彈",
+    1
+   ],
+   "gain": 3
+  },
+  {
+   "id": "g3",
+   "prof": "eng",
+   "req": 50,
+   "name": "鐵殼雷",
+   "mats": {
+    "鐵錠": 1,
+    "亞麻布": 2
+   },
+   "out": [
+    "鐵殼雷",
+    1
+   ],
+   "gain": 3
+  },
+  {
+   "id": "c1",
+   "prof": "cook",
+   "req": 1,
+   "name": "烤狼排",
+   "mats": {
+    "狼肉": 1
+   },
+   "out": [
+    "烤狼排",
+    1
+   ],
+   "gain": 2,
+   "fire": 1
+  },
+  {
+   "id": "c2",
+   "prof": "cook",
+   "req": 1,
+   "name": "烤溪魚",
+   "mats": {
+    "生鮮溪魚": 1
+   },
+   "out": [
+    "烤溪魚",
+    1
+   ],
+   "gain": 2,
+   "fire": 1
+  },
+  {
+   "id": "c3",
+   "prof": "cook",
+   "req": 20,
+   "name": "香烤野豬排",
+   "mats": {
+    "野豬肉": 1
+   },
+   "out": [
+    "香烤野豬排",
+    1
+   ],
+   "gain": 2,
+   "fire": 1
+  },
+  {
+   "id": "f1",
+   "prof": "aid",
+   "req": 1,
+   "name": "亞麻繃帶",
+   "mats": {
+    "亞麻布": 1
+   },
+   "out": [
+    "亞麻繃帶",
+    1
+   ],
+   "gain": 2
+  },
+  {
+   "id": "f2",
+   "prof": "aid",
+   "req": 25,
+   "name": "厚亞麻繃帶",
+   "mats": {
+    "亞麻布": 2
+   },
+   "out": [
+    "厚亞麻繃帶",
+    1
+   ],
+   "gain": 2
+  }
+ ]
+}
+</script>
+<script type="application/json" id="tbl-world">
+{
+ "mons": {
+  "pup": {
+   "name": "荒野幼狼",
+   "icon": "🐺",
+   "lv": 1,
+   "hp": 50,
+   "atkMin": 3,
+   "atkMax": 5,
+   "spd": 2.2,
+   "armor": 5,
+   "xp": 45,
+   "skin": "破損的狼皮",
+   "ai": "howl",
+   "howlTh": 0.3,
+   "howlCast": 2,
+   "supportDelay": 6,
+   "fleeTh": 0.15,
+   "drops": [
+    [
+     "破損的狼皮",
+     0.6
+    ],
+    [
+     "狼肉",
+     0.4
+    ],
+    [
+     "狼牙",
+     0.15
+    ],
+    [
+     "亞麻布",
+     0.18
+    ],
+    [
+     "完好的狼皮",
+     0.03,
+     1
+    ]
+   ]
+  },
+  "boar": {
+   "name": "巨齒野豬",
+   "icon": "🐗",
+   "lv": 3,
+   "hp": 85,
+   "atkMin": 5,
+   "atkMax": 8,
+   "spd": 2.6,
+   "armor": 15,
+   "xp": 95,
+   "big": 1,
+   "skin": "粗糙的豬皮",
+   "ai": "charge",
+   "chargeEvery": 8,
+   "chargeCast": 1.5,
+   "chargeMult": 2.2,
+   "drops": [
+    [
+     "粗糙的豬皮",
+     0.6
+    ],
+    [
+     "野豬肉",
+     0.45
+    ],
+    [
+     "彎曲的獠牙",
+     0.2
+    ],
+    [
+     "亞麻布",
+     0.18
+    ],
+    [
+     "獠牙短矛",
+     0.08,
+     1
+    ]
+   ]
+  },
+  "grey": {
+   "name": "成年灰狼",
+   "icon": "🐺",
+   "lv": 5,
+   "hp": 120,
+   "atkMin": 7,
+   "atkMax": 10,
+   "spd": 2.2,
+   "armor": 10,
+   "xp": 150,
+   "big": 1,
+   "grey": 1,
+   "skin": "厚實的狼皮",
+   "ai": "howl",
+   "howlTh": 0.4,
+   "howlCast": 2,
+   "supportDelay": 4,
+   "fleeTh": 0,
+   "drops": [
+    [
+     "厚實的狼皮",
+     0.6
+    ],
+    [
+     "狼肉",
+     0.5
+    ],
+    [
+     "銳利的狼牙",
+     0.25
+    ],
+    [
+     "亞麻布",
+     0.2
+    ],
+    [
+     "灰狼獵刃",
+     0.06,
+     1
+    ]
+   ]
+  },
+  "king": {
+   "name": "獨眼狼王",
+   "icon": "👑",
+   "lv": 7,
+   "hp": 300,
+   "atkMin": 9,
+   "atkMax": 13,
+   "spd": 2,
+   "armor": 20,
+   "xp": 600,
+   "big": 1,
+   "elite": 1,
+   "skin": "厚實的狼皮",
+   "ai": "howl",
+   "howlTh": 0.6,
+   "howlCast": 2,
+   "supportDelay": 4,
+   "fleeTh": 0,
+   "enrageTh": 0.3,
+   "enrageSpd": 1.4,
+   "drops": [
+    [
+     "狼王之牙",
+     1,
+     1
+    ],
+    [
+     "完好的狼皮",
+     1,
+     1
+    ],
+    [
+     "厚實的狼皮",
+     0.8
+    ],
+    [
+     "亞麻布",
+     0.5
+    ]
+   ]
+  }
+ },
+ "zones": [
+  {
+   "id": "village",
+   "name": "溪畔村",
+   "lvReq": 1,
+   "cls": "zone-village",
+   "village": 1,
+   "desc": "安全區 · 七棟建築 · 碼頭可釣魚",
+   "idle": [
+    "溪畔村的火堆劈啪作響。",
+    "水車緩緩轉著，溪水在月光下發亮。",
+    "旅店裡飄出燉肉的香氣。"
+   ]
+  },
+  {
+   "id": "slope",
+   "name": "林緣草坡",
+   "lvReq": 1,
+   "cls": "zone-slope",
+   "herb": "月光草",
+   "ore": "銅礦石",
+   "campMat": [
+    "破損的狼皮",
+    "狼肉"
+   ],
+   "desc": "Lv1+ · 幼狼（1–3隻）· 藥草：月光草 · 礦脈：銅",
+   "idle": [
+    "月光下的松林邊緣，一切安靜。",
+    "風吹過草坡，遠處傳來零星狼嚎。",
+    "露水沾濕了你的靴子。"
+   ],
+   "spawnTable": [
+    [
+     0.6,
+     [
+      "pup"
+     ]
+    ],
+    [
+     0.3,
+     [
+      "pup",
+      "pup"
+     ]
+    ],
+    [
+     0.1,
+     [
+      "pup",
+      "pup",
+      "pup"
+     ]
+    ]
+   ]
+  },
+  {
+   "id": "mill",
+   "name": "老風車磨坊",
+   "lvReq": 3,
+   "cls": "zone-mill",
+   "herb": "野蜂草",
+   "ore": "錫礦石",
+   "campMat": [
+    "粗糙的豬皮",
+    "野豬肉"
+   ],
+   "desc": "Lv3+ · 巨齒野豬（衝鋒可硬擋）· 藥草：野蜂草 · 礦脈：錫",
+   "idle": [
+    "破舊的風車葉在夜風裡吱呀作響。",
+    "磨坊的影子拉得很長，草叢裡有拱土的痕跡。",
+    "你聞到一股野獸的騷味。"
+   ],
+   "spawnTable": [
+    [
+     0.7,
+     [
+      "boar"
+     ]
+    ],
+    [
+     0.3,
+     [
+      "boar",
+      "pup"
+     ]
+    ]
+   ]
+  },
+  {
+   "id": "pine",
+   "name": "深松林",
+   "lvReq": 5,
+   "cls": "zone-pine",
+   "herb": "松影蕈",
+   "ore": "鐵礦石",
+   "campMat": [
+    "厚實的狼皮",
+    "狼肉"
+   ],
+   "desc": "Lv5+ · 成年灰狼 · 狼王傳聞 · 藥草：松影蕈 · 礦脈：鐵",
+   "idle": [
+    "高聳的松樹遮住了月亮，林間近乎全黑。",
+    "某處有雙眼睛在盯著你。",
+    "獵人灰羽說過：先別去。你還是來了。"
+   ],
+   "spawnTable": [
+    [
+     0.05,
+     [
+      "king"
+     ]
+    ],
+    [
+     0.6,
+     [
+      "grey"
+     ]
+    ],
+    [
+     0.35,
+     [
+      "grey",
+      "pup"
+     ]
+    ]
+   ]
+  }
+ ],
+ "buildings": [
+  {
+   "id": "inn",
+   "icon": "🏠",
+   "name": "溪畔旅店",
+   "npc": "梅姨",
+   "face": "👩‍🍳",
+   "teach": [
+    "tailor",
+    "cook"
+   ],
+   "say": "外頭冷吧？火堆邊坐。縫縫補補、烤烤煮煮，都是我看家的本事。"
+  },
+  {
+   "id": "smith",
+   "icon": "⚒️",
+   "name": "鐵匠鋪",
+   "npc": "老鄧",
+   "face": "🧔",
+   "teach": [
+    "mine",
+    "smith",
+    "eng"
+   ],
+   "say": "武器鈍了就拿來。想學看礦、打鐵、搗鼓機關？手伸出來我看看繭。"
+  },
+  {
+   "id": "shop",
+   "icon": "🧺",
+   "name": "雜貨店",
+   "npc": "阿滿",
+   "face": "🧑‍🌾",
+   "teach": [
+    "herb",
+    "alch"
+   ],
+   "say": "收皮收牙，賣乾糧賣布。認藥、熬藥的門道，我年輕跑藥商時學的。"
+  },
+  {
+   "id": "hunter",
+   "icon": "🏹",
+   "name": "獵人小屋",
+   "npc": "灰羽",
+   "face": "🧝",
+   "teach": [
+    "skin",
+    "leather"
+   ],
+   "say": "深林不是新手去的地方。剝皮、鞣皮的手藝，倒是可以教你。"
+  },
+  {
+   "id": "board",
+   "icon": "📜",
+   "name": "告示板",
+   "npc": "",
+   "face": "📜",
+   "say": "板上貼著幾張泛黃的懸賞告示，墨跡有新有舊。"
+  },
+  {
+   "id": "fire",
+   "icon": "🔥",
+   "name": "村口火堆",
+   "npc": "石叔",
+   "face": "🧓",
+   "teach": [
+    "ench",
+    "aid"
+   ],
+   "say": "……戰場上撿回一條命，靠的是繃帶；撿回幾件會發光的兵器，靠的是眼力。都教你。"
+  },
+  {
+   "id": "dock",
+   "icon": "🎣",
+   "name": "溪畔碼頭",
+   "npc": "小溪",
+   "face": "🧒",
+   "teach": [
+    "fish"
+   ],
+   "say": "哥哥姊姊要釣魚嗎？我教你！魚都躲在水車影子底下喔。"
+  }
+ ],
+ "quests": {
+  "q1": {
+   "name": "狼牙懸賞",
+   "giver": "board",
+   "lvReq": 1,
+   "type": "collect",
+   "item": "狼牙",
+   "n": 5,
+   "reward": {
+    "copper": 30,
+    "xp": 120
+   },
+   "clue": "告示：「收狼牙五枚，見物付錢。」——林緣草坡的幼狼嘴裡就長著。"
+  },
+  "q3": {
+   "name": "今晚的燉肉",
+   "giver": "inn",
+   "lvReq": 1,
+   "type": "collect",
+   "item": "狼肉",
+   "n": 3,
+   "reward": {
+    "copper": 15,
+    "xp": 80,
+    "item": [
+     "野豬肉",
+     1
+    ]
+   },
+   "clue": "梅姨的燉鍋咕嘟作響：「再來三塊狼肉就齊了。獵狼的時候記得挑肥的。」"
+  },
+  "q4": {
+   "name": "狼群減量",
+   "giver": "hunter",
+   "lvReq": 1,
+   "type": "kill",
+   "kind": "pup",
+   "n": 8,
+   "reward": {
+    "copper": 50,
+    "xp": 220
+   },
+   "clue": "灰羽擦著弓：「草坡的幼狼一窩接一窩，再不清就要進村了。替我清八隻。」"
+  },
+  "q2": {
+   "name": "柵欄的木釘",
+   "giver": "smith",
+   "lvReq": 3,
+   "type": "collect",
+   "item": "粗糙的豬皮",
+   "n": 4,
+   "reward": {
+    "copper": 40,
+    "xp": 180
+   },
+   "clue": "老鄧敲著鐵砧：「東邊柵欄要補，拿四張豬皮來蒙釘眼。磨坊那頭的野豬皮最厚。」"
+  },
+  "q5": {
+   "name": "磨坊的騷動",
+   "giver": "board",
+   "lvReq": 3,
+   "type": "kill",
+   "kind": "boar",
+   "n": 3,
+   "reward": {
+    "copper": 60,
+    "xp": 260
+   },
+   "clue": "告示：「磨坊的野豬拱壞了三畦田，獵殺三頭有賞。」下方有人加了一行小字：小心牠們低頭的時候。"
+  },
+  "q6": {
+   "name": "深林的影子",
+   "giver": "hunter",
+   "lvReq": 5,
+   "type": "kill",
+   "kind": "grey",
+   "n": 5,
+   "reward": {
+    "copper": 90,
+    "xp": 400
+   },
+   "clue": "灰羽望向深松林：「成年灰狼開始成群了，這不對勁。五匹——然後我們再談林子深處的事。」"
+  },
+  "q7": {
+   "name": "獨眼的宿敵",
+   "giver": "fire",
+   "lvReq": 6,
+   "type": "kill",
+   "kind": "king",
+   "n": 1,
+   "reward": {
+    "copper": 300,
+    "xp": 800
+   },
+   "clue": "石叔捲起袖口，三道舊爪痕在火光裡發白：「牠瞎的那隻眼，是我年輕時留給牠的。牠還在深松林等我……替我做個了結。」"
+  }
+ },
+ "questOrder": [
+  "q1",
+  "q3",
+  "q4",
+  "q2",
+  "q5",
+  "q6",
+  "q7"
+ ]
+}
+</script>
+<script>
+"use strict";
+/* =====================================================
+   永恆傳承 M0 原型 v0.7 —— 資料驅動重構(基底 v0.6)
+   · 內容全數移入四張內嵌資料表:curves / stats / items / world
+   · 單一真值來源:GDB v0.8 + GDB增補一 v1.0(canon60 曲線已入庫)
+   · 引擎邏輯與 v0.6 完全一致;存檔鍵不變,舊帳號直接相容
+   · 主要專業 9 門（限學 2）：採礦/採藥/剝皮/煉藥/鍛造/製皮/裁縫/附魔/工程
+   · 次要專業 3 門（人人可學）：烹飪/釣魚/急救
+   · 種族親和＝熟練度加成（不鎖定任何專業，忠於魔獸）
+   · 新增：溪畔碼頭（釣魚）、熔煉、分解附魔、炸彈、繃帶、熟食
+   ===================================================== */
+/* ---------- 資料層載入(Roadmap 第二步:引擎讀表,內容進資料) ---------- */
+const tblLoad=id=>JSON.parse(document.getElementById(id).textContent);
+const CURVES=tblLoad("tbl-curves"), _CV=CURVES.proto;
+const _ST=tblLoad("tbl-stats"), _IT=tblLoad("tbl-items"), _WD=tblLoad("tbl-world");
+const TICK=_CV.tick, SAVE_KEY=_CV.saveKey, SLOTS=_CV.slots;
+const PROF_CAP=_CV.profCap, PRIMARY_MAX=_CV.primaryMax;
+const CAMP_TICK_SEC=_CV.campTickSec, OFFLINE_EFF=_CV.offlineEff, OFFLINE_CAP_H=_CV.offlineCapH;
+const RACES=_ST.races, CLASSES=_ST.classes, RACE_CLASSES=_ST.raceClasses;
+const PROFS=_ST.profs, PROF_ORDER=_ST.profOrder;
+const RECIPES=_IT.recipes, ITEMS=_IT.items;
+const MONS=_WD.mons, BUILDINGS=_WD.buildings, QUESTS=_WD.quests, QUEST_ORDER=_WD.questOrder;
+/* 出怪表 → roll 函式(機率表在 tbl-world,引擎只做加權抽選) */
+function spawnPick(t){let r=Math.random();for(const e of t){if(r<e[0])return e[1].slice();r-=e[0];}return t[t.length-1][1].slice();}
+const ZONES=_WD.zones.map(z=>z.spawnTable?{...z,roll:()=>spawnPick(z.spawnTable)}:z);
+const zoneById=id=>ZONES.find(z=>z.id===id)||ZONES[0];
+/* CFG:公式以係數存表,載入時重建 */
+const CFG=_CV.cfg;
+CFG.player.xpForLv=lv=>CFG.player.xpPerLv*lv;
+CFG.armorReduce=a=>a/(a+CFG.armorK);
+
+/* ---------- 音效 ---------- */
+let AC=null,soundOn=true;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}return AC;}
+function tone(f,dur,type,vol,slide){
+  if(!soundOn)return;const c=ac();if(!c)return;
+  const o=c.createOscillator(),g=c.createGain();
+  o.type=type||"triangle";o.frequency.value=f;
+  if(slide)o.frequency.exponentialRampToValueAtTime(slide,c.currentTime+dur);
+  g.gain.value=vol||.08;
+  g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+dur);
+  o.connect(g);g.connect(c.destination);
+  o.start();o.stop(c.currentTime+dur);
+}
+const sfx={
+  hit:()=>tone(160,.09,"square",.05,90),
+  crit:()=>{tone(520,.12,"square",.07);setTimeout(()=>tone(780,.15,"square",.07),60);},
+  hurt:()=>tone(110,.14,"sawtooth",.06,60),
+  kill:()=>{tone(300,.1,"triangle",.07);setTimeout(()=>tone(200,.18,"triangle",.06,90),80);},
+  loot:()=>tone(880,.09,"sine",.05),
+  rare:()=>{[660,880,1100].forEach((f,i)=>setTimeout(()=>tone(f,.14,"sine",.06),i*90));},
+  level:()=>{[440,554,659,880].forEach((f,i)=>setTimeout(()=>tone(f,.2,"triangle",.08),i*110));},
+  howl:()=>tone(320,.5,"sine",.06,180),
+  skill:()=>tone(240,.08,"square",.05,320),
+  quest:()=>{[523,659,784].forEach((f,i)=>setTimeout(()=>tone(f,.16,"triangle",.07),i*100));},
+  coin:()=>{tone(988,.07,"sine",.05);setTimeout(()=>tone(1319,.1,"sine",.05),70);},
+  gather:()=>tone(700,.12,"sine",.05,900),
+  craft:()=>{tone(420,.1,"triangle",.06);setTimeout(()=>tone(630,.14,"triangle",.06),90);},
+  boom:()=>{tone(80,.3,"sawtooth",.1,40);},
+};
+
+/* ---------- 帳號與角色 ---------- */
+let ACC=null,P=null,curSlot=-1;
+function newChar(slot,name,race,cls){
+  return {slot,name,race,cls,lv:1,xp:0,hp:0,resVal:0,zone:"village",
+    stance:false,sk1Primed:false,sk3ReadyAt:0,copper:0,inv:{},quests:{},
+    profs:{},camping:false,lastTs:Date.now(),gatherAt:0,fishAt:0,bandAt:0,
+    weaponAtk:0,weaponName:CLASSES[cls].weapon,
+    equip:[{name:CLASSES[cls].weapon,dur:100,max:100,ench:0},{name:"見習布甲",dur:100,max:100,armor:0,ench:0}],
+    stats:{battles:0,kills:0,deaths:0,flees:0,ttkList:[],sk1Use:0,sk2Toggle:0,sk3Use:0,
+           interrupts:0,howlsLanded:0,blocks:0,questsDone:0,crafts:0,gathers:0,playTime:0},
+    atkTimer:0};
+}
+const raceMod=(k,d)=>{const m=RACES[P.race].mods;return m[k]!==undefined?m[k]:d;};
+function profBonus(key){
+  const b=RACES[P.race].profBonus||{};
+  return (b[key]||0)+(b["*"]||0);
+}
+const effProf=key=>P.profs[key]?P.profs[key].lv+profBonus(key):0;
+const hpMax =()=>Math.round((CFG.player.hpBase+CFG.player.hpPerLv*(P.lv-1))*raceMod("hp",1));
+const atkMin=()=>(CFG.player.atkMin+CFG.player.atkPerLv*(P.lv-1)+(P.weaponAtk||0)+(P.equip[0].ench||0))*raceMod("atk",1);
+const atkMax=()=>(CFG.player.atkMax+CFG.player.atkPerLv*(P.lv-1)+(P.weaponAtk||0)+(P.equip[0].ench||0))*raceMod("atk",1);
+const critCh=()=>CFG.player.crit+raceMod("crit",0);
+const armor =()=>CFG.player.armorBase+CFG.player.armorPerLv*(P.lv-1)
+  +(P.stance?CLASSES[P.cls].sk2.armor:0)+((P.equip[1]&&P.equip[1].armor)||0)+((P.equip[1]&&P.equip[1].ench)||0);
+const resCfg=()=>CFG.resource[CLASSES[P.cls].res];
+const sk3CD =()=>Math.max(4,CFG.sk3.cd-raceMod("cdr",0));
+const weaponBroken=()=>P.equip[0].dur<=0;
+const inVillage=()=>zoneById(P.zone).village===1;
+const nearFire=()=>inVillage()||P.camping;
+const rnd=(a,b)=>a+Math.random()*(b-a),ri=(a,b)=>Math.round(rnd(a,b));
+
+/* ---------- 遊戲狀態 ---------- */
+let mobs=[],inCombat=false,combatStart=0,combatN0=0,pendingSupport=null,eating=null,now=0;
+let mobSeq=0,targetId=null,autoBattle=false,campAccum=0;
+
+/* ---------- 通用 ---------- */
+const $=id=>document.getElementById(id);
+const logEl=$("log");
+function log(msg,cls){const d=document.createElement("div");if(cls)d.className=cls;
+  d.innerHTML=msg;logEl.appendChild(d);
+  while(logEl.children.length>60)logEl.removeChild(logEl.firstChild);
+  logEl.scrollTop=logEl.scrollHeight;}
+function showScreen(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("show"));$(id).classList.add("show");}
+function floatNum(el,text,cls){
+  const r=el.getBoundingClientRect(),s=$("stage").getBoundingClientRect();
+  const f=document.createElement("div");f.className="float-dmg "+cls;f.textContent=text;
+  f.style.left=(r.left-s.left+r.width*0.3+rnd(-12,12))+"px";
+  f.style.top=(r.top-s.top-6)+"px";
+  $("stage").appendChild(f);setTimeout(()=>f.remove(),1000);}
+function shake(){const s=$("stage");s.classList.remove("shake");void s.offsetWidth;s.classList.add("shake");}
+function flash(){const s=$("stage");s.classList.remove("flash");void s.offsetWidth;s.classList.add("flash");setTimeout(()=>s.classList.remove("flash"),200);}
+function pressFx(id){const b=$(id);b.classList.remove("pressed");void b.offsetWidth;b.classList.add("pressed");}
+
+/* ============ 角色選擇 ============ */
+function renderSlots(){
+  const box=$("slots");box.innerHTML="";
+  for(let i=0;i<SLOTS;i++){
+    const c=ACC.chars[i];
+    const d=document.createElement("button");
+    if(c){
+      d.className="slot";
+      d.innerHTML=`<button class="del" data-slot="${i}">刪除</button>
+        <div class="ic">${RACES[c.race].icon}${CLASSES[c.cls].icon}</div>
+        <div class="nm">${c.name}</div>
+        <div class="info">Lv.${c.lv} ${RACES[c.race].name} · ${CLASSES[c.cls].name}${c.camping?"<br>⛺ 紮營中":""}</div>`;
+      d.onclick=e=>{if(e.target.classList.contains("del"))return;enterGame(i);};
+      d.querySelector(".del").onclick=e=>{e.stopPropagation();
+        if(confirm(`確定刪除「${c.name}」？此動作無法復原。`)){ACC.chars[i]=null;saveAcc();renderSlots();}};
+    }else{
+      d.className="slot empty";
+      d.innerHTML=`<div class="ic">＋</div><div class="nm">創建角色</div><div class="info">空欄位</div>`;
+      d.onclick=()=>openCreate(i);
+    }
+    box.appendChild(d);
+  }
+}
+
+/* ============ 角色創建 ============ */
+let cRace=null,cClass=null,cSlot=-1;
+function openCreate(slot){
+  cSlot=slot;cRace=null;cClass=null;
+  $("name-input").value="";
+  renderRaceGrid();renderClassGrid();
+  $("pick-desc").innerHTML="選擇一個種族開始。八族源自不同的土地——你的出身就是你的第一個故事。";
+  $("btn-confirm-create").disabled=true;
+  showScreen("scr-create");
+}
+function renderRaceGrid(){
+  const g=$("race-grid");g.innerHTML="";
+  Object.keys(RACES).forEach(k=>{
+    const r=RACES[k];
+    const b=document.createElement("button");
+    b.className="pick"+(cRace===k?" on":"");
+    b.innerHTML=`<span class="ic">${r.icon}</span>${r.name}`;
+    b.onclick=()=>{cRace=k;
+      if(cClass&&!RACE_CLASSES[k].includes(cClass))cClass=null;
+      renderRaceGrid();renderClassGrid();updateDesc();checkCreate();};
+    g.appendChild(b);
+  });
+}
+function renderClassGrid(){
+  const g=$("class-grid");g.innerHTML="";
+  Object.keys(CLASSES).forEach(k=>{
+    const c=CLASSES[k];
+    const ok=cRace?RACE_CLASSES[cRace].includes(k):false;
+    const b=document.createElement("button");
+    b.className="pick"+(cClass===k?" on":"")+(cRace&&!ok?" locked":"");
+    b.innerHTML=`<span class="ic">${c.icon}</span>${c.name}`;
+    b.disabled=!cRace||!ok;
+    b.onclick=()=>{cClass=k;renderClassGrid();updateDesc();checkCreate();};
+    g.appendChild(b);
+  });
+}
+function updateDesc(){
+  let html="";
+  if(cRace){const r=RACES[cRace];
+    html+=`<b>${r.icon} ${r.name}</b>（${r.proto}）— ${r.trait}<br>${r.lore}`;}
+  if(cClass){const c=CLASSES[cClass];
+    html+=`<br><b>${c.icon} ${c.name}</b>（${c.role} · 資源：${CFG.resource[c.res].label}）<br>
+      1 ${c.sk1.name}：${c.sk1.desc}｜2 ${c.sk2.name}：${c.sk2.desc}｜3 ${c.sk3.name}：${c.sk3.desc}`;}
+  if(cRace&&!cClass)
+    html+=`<br><span style="color:var(--moon-dim)">此族可選：${RACE_CLASSES[cRace].map(k=>CLASSES[k].name).join("、")}</span>`;
+  $("pick-desc").innerHTML=html||"選擇一個種族開始。";
+}
+function checkCreate(){$("btn-confirm-create").disabled=!(cRace&&cClass&&$("name-input").value.trim().length>0);}
+$("name-input").addEventListener("input",checkCreate);
+$("btn-cancel-create").onclick=()=>showScreen("scr-select");
+$("btn-confirm-create").onclick=()=>{
+  const name=$("name-input").value.trim();
+  if(!name||!cRace||!cClass)return;
+  ACC.chars[cSlot]=newChar(cSlot,name,cRace,cClass);
+  saveAcc();enterGame(cSlot,true);
+};
+
+/* ============ 進入遊戲（含離線紮營結算） ============ */
+function enterGame(slot,fresh){
+  curSlot=slot;P=ACC.chars[slot];
+  P.stats=Object.assign(newChar(0,"","dawn","squire").stats,P.stats||{});
+  if(P.zone===undefined||!zoneById(P.zone))P.zone="village";
+  if(P.quests===undefined)P.quests={};
+  if(P.profs===undefined)P.profs={};
+  if(P.camping===undefined)P.camping=false;
+  /* 遊戲內計時器以 now（本階段秒數）為基準，跨階段一律歸零，避免假冷卻 */
+  P.gatherAt=0;P.fishAt=0;P.bandAt=0;P.sk3ReadyAt=0;
+  if(P.weaponAtk===undefined){P.weaponAtk=0;P.weaponName=P.equip[0].name;}
+  P.equip.forEach(e=>{if(e.ench===undefined)e.ench=0;});
+  if(P.equip[1]&&P.equip[1].armor===undefined)P.equip[1].armor=0;
+  if(P.hp<=0)P.hp=hpMax();
+  if(fresh){P.hp=hpMax();P.resVal=(CLASSES[P.cls].res==="rage")?0:CFG.resource[CLASSES[P.cls].res].max;}
+  inCombat=false;mobs=[];pendingSupport=null;eating=null;autoBattle=false;campAccum=0;
+  logEl.innerHTML="";
+  const c=CLASSES[P.cls],r=RACES[P.race];
+  $("char-name").innerHTML=`${r.icon} ${P.name} <b id="lv">Lv.${P.lv}</b>`;
+  $("player-avatar").textContent=c.icon;
+  $("sk1-name").textContent=c.sk1.name;
+  $("sk1-cost").textContent=c.sk1.cost+" "+CFG.resource[c.res].label;
+  $("sk2-name").textContent=c.sk2.name;
+  $("sk3-name").textContent=c.sk3.name;
+  $("sk3-cost").textContent=c.sk3.cost+" "+CFG.resource[c.res].label;
+  $("res-fill").style.background=CFG.resource[c.res].color;
+  $("enemies").innerHTML="";
+  if(fresh){
+    log(r.lore,"sys");
+    log(`你在溪畔村的火堆旁睜開眼。旅店的梅姨遞來一碗熱湯：「醒啦？村子雖小，要什麼有什麼——先去<b>告示板</b>看看吧。」`,"npc");
+    const pb=RACES[P.race].profBonus||{};
+    const pbStr=Object.keys(pb).map(k=>k==="*"?`全專業+${pb[k]}`:`${PROFS[k].name}+${pb[k]}`).join("、");
+    if(pbStr)log(`（種族專業親和：${pbStr}——不限制學什麼，只是學起來更快更深。）`,"prof");
+  }else{
+    log(`${P.name} 回到了月松林。`,"sys");
+    settleOfflineCamp();
+  }
+  applyZone();
+  refreshUI();showScreen("scr-game");
+}
+function settleOfflineCamp(){
+  if(!P.camping||!P.lastTs)return;
+  const sec=Math.min(OFFLINE_CAP_H*3600,Math.max(0,(Date.now()-P.lastTs)/1000));
+  const ticks=Math.floor(sec/CAMP_TICK_SEC*OFFLINE_EFF);
+  if(ticks<3){log(`⛺ 你仍在${zoneById(P.zone).name}紮營。`,"sys");return;}
+  const z=zoneById(P.zone),gain={};let coins=0,profH=0,profS=0,profM=0;
+  for(let i=0;i<ticks;i++){
+    coins+=ri(0,1);
+    if(Math.random()<.35){const m=z.campMat[ri(0,z.campMat.length-1)];gain[m]=(gain[m]||0)+1;}
+    if(P.profs.herb&&Math.random()<.30){gain[z.herb]=(gain[z.herb]||0)+1;profH++;}
+    if(P.profs.mine&&Math.random()<.25){gain[z.ore]=(gain[z.ore]||0)+1;profM++;}
+    if(P.profs.skin&&Math.random()<.22){gain[z.campMat[0]]=(gain[z.campMat[0]]||0)+1;profS++;}
+  }
+  Object.keys(gain).forEach(k=>P.inv[k]=(P.inv[k]||0)+gain[k]);
+  P.copper+=coins;
+  if(P.profs.herb)profUp("herb",Math.min(profH,10));
+  if(P.profs.mine)profUp("mine",Math.min(profM,10));
+  if(P.profs.skin)profUp("skin",Math.min(profS,10));
+  const list=Object.keys(gain).map(k=>`${k}×${gain[k]}`).join("、")||"一些柴火";
+  const hrs=(sec/3600).toFixed(1);
+  log(`⛺ <b>離線紮營結算</b>（${hrs} 小時，效率 ${OFFLINE_EFF*100}%，上限 ${OFFLINE_CAP_H} 小時）：`,"gold");
+  log(`收穫：<span class="loot">${list}、銅幣×${coins}</span>。角色在世界裡好好活著——但經驗一分沒漲：<b>升級是你自己的旅程</b>。`,"prof");
+}
+function applyZone(){
+  const z=zoneById(P.zone);
+  $("zone-name").textContent="月松林 · "+z.name;
+  $("stage").className=z.cls+(P.camping?" camping":"");
+  $("scene-caption").textContent=P.camping?`⛺ 你在${z.name}紮了營，火光搖曳。`:z.idle[0];
+  renderVillage();
+}
+$("btn-logout").onclick=()=>{
+  if(inCombat){log("戰鬥中無法登出——先逃跑或結束戰鬥。","warn");return;}
+  saveAcc();renderSlots();showScreen("scr-select");
+};
+
+/* ============ 專業核心 ============ */
+function profUp(key,amt){
+  const p=P.profs[key];if(!p)return;
+  const before=p.lv;
+  p.lv=Math.min(PROF_CAP,p.lv+(amt||1));
+  if(p.lv>before&&(p.lv%5===0||p.lv===PROF_CAP))
+    log(`📘 ${PROFS[key].icon} ${PROFS[key].name}熟練度提升至 <b>${p.lv}</b>${profBonus(key)?`（有效 ${p.lv+profBonus(key)}）`:""}${p.lv===PROF_CAP?"（M0 上限）":""}`,"prof");
+}
+function primaryCount(){
+  return Object.keys(P.profs).filter(k=>PROFS[k].tier==="primary").length;
+}
+function learnProf(key){
+  const info=PROFS[key];
+  if(P.profs[key]){log(`你已經學會${info.name}了。`,"sys");return;}
+  if(info.tier==="primary"&&primaryCount()>=PRIMARY_MAX){
+    log(`主要專業最多學 ${PRIMARY_MAX} 門（經典規則）。次要專業（烹飪/釣魚/急救）不佔名額。`,"warn");return;}
+  if(P.copper<CFG.learnCost){log("銅幣不夠拜師。","sys");return;}
+  P.copper-=CFG.learnCost;
+  P.profs[key]={lv:1};
+  sfx.quest();
+  const bonus=profBonus(key);
+  log(`📘 你學會了 <b>${info.icon} ${info.name}</b>（${info.tier==="primary"?"主要":"次要"}）！${bonus?`種族親和 +${bonus}，`:""}${info.desc}`,"gold");
+  saveAcc();refreshUI();
+}
+/* 採集（採藥＋採礦共用一鍵） */
+function tryGather(){
+  if(inCombat||eating||inVillage()||P.camping)return;
+  const can=[];
+  if(P.profs.herb)can.push("herb");
+  if(P.profs.mine)can.push("mine");
+  if(can.length===0){log(`你還不會採集——阿滿教採藥、老鄧教採礦。`,"sys");return;}
+  if(now<P.gatherAt){log(`這一帶的資源還沒恢復（${Math.ceil(P.gatherAt-now)} 秒）。`,"sys");return;}
+  const z=zoneById(P.zone);
+  P.gatherAt=now+CFG.gatherCD;
+  const pick=can[ri(0,can.length-1)];
+  const n=ri(1,2);
+  if(pick==="herb"){
+    P.inv[z.herb]=(P.inv[z.herb]||0)+n;profUp("herb",1);
+    log(`🌿 你採到了 <span class="loot">${z.herb}×${n}</span>。`,"prof");
+  }else{
+    P.inv[z.ore]=(P.inv[z.ore]||0)+n;profUp("mine",1);
+    log(`⛏️ 你敲下了 <span class="loot">${z.ore}×${n}</span>。`,"prof");
+  }
+  P.stats.gathers=(P.stats.gathers||0)+1;
+  sfx.gather();
+  saveAcc();refreshUI();
+}
+/* 釣魚（碼頭） */
+function tryFish(){
+  if(!P.profs.fish){log("你還不會釣魚——碼頭的小溪願意教你。","sys");return;}
+  if(now<P.fishAt){log(`魚還沒上鉤（${Math.ceil(P.fishAt-now)} 秒）。`,"sys");return;}
+  P.fishAt=now+CFG.fishCD;
+  const r=Math.random();
+  if(r<.70){P.inv["生鮮溪魚"]=(P.inv["生鮮溪魚"]||0)+1;log(`🎣 上鉤了！<span class="loot">生鮮溪魚×1</span>`,"prof");}
+  else if(r<.90){P.copper+=1;log(`🎣 釣上一隻舊靴子……裡面居然有 1 枚銅幣。`,"sys");}
+  else{P.copper+=5;log(`🎣 釣上一個小錢袋！<span class="loot">銅幣×5</span>`,"gold");}
+  profUp("fish",1);
+  P.stats.gathers=(P.stats.gathers||0)+1;
+  sfx.gather();
+  saveAcc();
+}
+/* 製作 */
+function craft(rid){
+  const r=RECIPES.find(x=>x.id===rid);if(!r)return;
+  const p=P.profs[r.prof];
+  if(!p||effProf(r.prof)<r.req)return;
+  if(r.fire&&!nearFire()){log("烹飪需要火源——回村或先紮營。","sys");return;}
+  for(const m in r.mats)if((P.inv[m]||0)<r.mats[m]){log("材料不足。","sys");return;}
+  for(const m in r.mats)P.inv[m]-=r.mats[m];
+  if(r.ench){
+    const slotName=r.ench.slot===0?"武器":"防具";
+    P.equip[r.ench.slot].ench=r.ench.val;
+    log(`✨ <b>${r.name}</b>完成——${P.equip[r.ench.slot].name}泛起微光（${r.eff}）。<span style="font-size:11px;color:var(--moon-dim)">更換${slotName}會失去附魔。</span>`,"gold");
+  }else{
+    P.inv[r.out[0]]=(P.inv[r.out[0]]||0)+r.out[1];
+    log(`${PROFS[r.prof].icon} 製作完成：<span class="loot">${r.out[0]}×${r.out[1]}</span>`,"prof");
+  }
+  P.stats.crafts=(P.stats.crafts||0)+1;
+  profUp(r.prof,r.gain);
+  sfx.craft();
+  saveAcc();openProfs();refreshUI();
+}
+/* 分解（附魔） */
+function disenchant(name){
+  if(!P.profs.ench){log("你還不會附魔。","sys");return;}
+  const it=ITEMS[name];
+  if(!it||!(it.weapon||it.armorEq)||!(P.inv[name]>0))return;
+  P.inv[name]--;
+  const n=ri(1,2);
+  P.inv["奇異之塵"]=(P.inv["奇異之塵"]||0)+n;
+  profUp("ench",2);
+  sfx.craft();
+  log(`✨ 你分解了${name}，獲得 <span class="loot">奇異之塵×${n}</span>。`,"prof");
+  saveAcc();openBag();refreshUI();
+}
+function openProfs(){
+  const b=$("profs-body");
+  let html="";
+  const learned=PROF_ORDER.filter(k=>P.profs[k]);
+  if(learned.length===0){
+    html+=`<div style="color:var(--moon-dim)">尚未學習任何專業。拜師費 ${CFG.learnCost} 銅：<br>
+    ⚒️ 老鄧：採礦、鍛造、工程<br>🧺 阿滿：採藥、煉藥<br>🏹 灰羽：剝皮、製皮<br>
+    🏠 梅姨：裁縫、烹飪<br>🔥 石叔：附魔、急救<br>🎣 小溪：釣魚<br>
+    <b>主要專業限 ${PRIMARY_MAX} 門</b>；烹飪/釣魚/急救是次要專業，人人可學。</div>`;
+  }else{
+    html+=`<div style="font-size:12px;color:var(--moon-dim);margin-bottom:6px">主要專業：${primaryCount()}/${PRIMARY_MAX}｜次要專業不限</div>`;
+  }
+  learned.forEach(k=>{
+    const p=P.profs[k],info=PROFS[k],bonus=profBonus(k),eff=p.lv+bonus;
+    html+=`<div style="margin-bottom:4px"><b>${info.icon} ${info.name}</b>
+      <span style="font-size:11px;color:var(--moon-dim)">（${info.tier==="primary"?"主要·"+info.kind:"次要"}）
+      ${p.lv}${bonus?` <span class="ok">+${bonus}</span> = ${eff}`:""} / ${PROF_CAP}${bonus?`+${bonus}`:""}</span></div>
+      <div class="prof-bar"><i style="transform:scaleX(${Math.min(1,p.lv/PROF_CAP)})"></i></div>`;
+    const rs=RECIPES.filter(r=>r.prof===k);
+    if(k==="skin")html+=`<div style="font-size:12px;color:var(--moon-dim);margin-bottom:8px">擊殺野獸後自動嘗試剝皮；紮營時也會累積。</div>`;
+    if(k==="herb"||k==="mine")html+=`<div style="font-size:12px;color:var(--moon-dim);margin-bottom:8px">野外按「採集」取得（冷卻共用 ${CFG.gatherCD} 秒）；紮營時也會累積。</div>`;
+    if(k==="fish")html+=`<div style="font-size:12px;color:var(--moon-dim);margin-bottom:8px">到溪畔碼頭找小溪，按「垂釣」。</div>`;
+    rs.forEach(r=>{
+      const okReq=eff>=r.req;
+      const okMat=Object.keys(r.mats).every(m=>(P.inv[m]||0)>=r.mats[m]);
+      const okFire=!r.fire||nearFire();
+      const matStr=Object.keys(r.mats).map(m=>`${m}×${r.mats[m]}（有${P.inv[m]||0}）`).join("、");
+      const outIt=r.out?ITEMS[r.out[0]]:null;
+      const effStr=r.eff?r.eff:
+        outIt&&outIt.potion?`藥水 · 回復 ${outIt.potion}（戰鬥可用）`:
+        outIt&&outIt.band?`繃帶 · 回復 ${outIt.band}（戰鬥可用，CD ${CFG.bandCD}s）`:
+        outIt&&outIt.bomb?`炸彈 · 傷害 ${outIt.bomb}${outIt.stun?`＋暈 ${outIt.stun}s`:""}（戰鬥可用）`:
+        outIt&&outIt.armorEq?`防具 · 護甲 +${outIt.armorEq}`:
+        outIt&&outIt.weapon?`武器 · 攻擊 +${outIt.weapon}`:
+        outIt&&outIt.food?`食物 · 回復 ${outIt.food}`:"";
+      html+=`<div class="q-item${okReq?"":" done-forever"}">
+        <span class="qn">${r.name}</span><span style="font-size:11px;color:var(--moon-dim)">（需熟練 ${r.req}${r.fire?"·需火源":""}）</span>
+        <div class="qc">${matStr}${effStr?"｜"+effStr:""}</div>
+        ${okReq?`<button class="mini" data-craft="${r.id}" ${okMat&&okFire?"":"disabled"}>${r.fire&&!nearFire()?"需要火源":"製作"}</button>`:""}
+      </div>`;
+    });
+  });
+  b.innerHTML=html;
+  b.querySelectorAll("[data-craft]").forEach(btn=>btn.onclick=()=>craft(btn.dataset.craft));
+  $("panel-profs").classList.add("show");
+}
+
+/* ============ 村莊 ============ */
+function questsAt(bid){return QUEST_ORDER.filter(q=>QUESTS[q].giver===bid);}
+function questState(qid){
+  const q=QUESTS[qid],st=P.quests[qid];
+  if(st&&st.done)return 3;
+  if(!st)return 0;
+  if(q.type==="kill")return st.p>=q.n?2:1;
+  return (P.inv[q.item]||0)>=q.n?2:1;
+}
+function buildingHasNews(bid){
+  return questsAt(bid).some(qid=>{
+    const s=questState(qid);
+    return (s===0&&P.lv>=QUESTS[qid].lvReq)||s===2;
+  });
+}
+function renderVillage(){
+  const g=$("village-grid");
+  if(!inVillage()){g.classList.remove("show");g.innerHTML="";return;}
+  g.classList.add("show");g.innerHTML="";
+  BUILDINGS.forEach(b=>{
+    const d=document.createElement("button");
+    d.className="bld";
+    d.innerHTML=`<span class="dot${buildingHasNews(b.id)?" show":""}"></span>
+      <span class="ic">${b.icon}</span>${b.name}
+      <div class="who">${b.npc||"—"}</div>`;
+    d.onclick=()=>openBuilding(b.id);
+    g.appendChild(d);
+  });
+}
+function openBuilding(bid){
+  const b=BUILDINGS.find(x=>x.id===bid);
+  $("npc-title").textContent=b.icon+" "+b.name+(b.npc?(" · "+b.npc):"");
+  const body=$("npc-body");
+  let html=`<div class="npc-head"><span class="face">${b.face}</span><span class="say">「${b.say}」</span></div>`;
+  if(bid==="inn"){
+    html+=`<div class="stat-row"><span>住一晚（HP 全滿）</span><b><button class="mini" data-act="rest">歇息 ${CFG.restCost} 銅</button></b></div>`;
+  }
+  if(bid==="smith"){
+    const cost=P.equip.reduce((a,e)=>a+Math.ceil((e.max-e.dur)*CFG.repairRate),0);
+    html+=`<div class="stat-row"><span>修理全部裝備（${P.equip.map(e=>e.dur+"/"+e.max).join("、")}）</span>
+      <b><button class="mini" data-act="repair" ${cost<=0?"disabled":""}>修理 ${cost} 銅</button></b></div>`;
+  }
+  if(bid==="shop"){
+    html+=`<div style="font-size:12px;color:var(--moon-dim);margin:6px 0 2px">— 購買 —</div>`;
+    Object.keys(ITEMS).filter(k=>ITEMS[k].buy).forEach(k=>{
+      const it=ITEMS[k];
+      html+=`<div class="stat-row"><span>${k}${it.food?`（回復${it.food}）`:""}</span>
+        <b><button class="mini" data-buy="${k}">買入 ${it.buy} 銅</button></b></div>`;
+    });
+    html+=`<div style="font-size:12px;color:var(--moon-dim);margin:10px 0 2px">— 出售（背包內素材）—</div>`;
+    let any=false;
+    Object.keys(P.inv).filter(k=>P.inv[k]>0&&ITEMS[k]&&ITEMS[k].sell).forEach(k=>{
+      any=true;
+      html+=`<div class="stat-row"><span>${k} ×${P.inv[k]}</span>
+        <b><button class="mini" data-sell="${k}">賣一個 ${ITEMS[k].sell} 銅</button>
+           <button class="mini" data-sellall="${k}">全賣 ${ITEMS[k].sell*P.inv[k]} 銅</button></b></div>`;
+    });
+    if(!any)html+=`<div style="color:var(--moon-dim);font-size:12px">（背包裡沒有可出售的素材）</div>`;
+  }
+  if(bid==="fire"){
+    html+=`<div style="font-size:12px;color:var(--moon-dim);margin:4px 0">孩童小溪蹲在火堆邊烤松果，看到你就笑：「哥哥姊姊，石叔每天半夜都往哨塔那邊走喔，我看到的！」</div>`;
+  }
+  if(bid==="dock"){
+    html+=`<div class="stat-row"><span>在碼頭垂釣${P.profs.fish?`（熟練 ${P.profs.fish.lv}）`:"（需先拜師）"}</span>
+      <b><button class="mini" data-act="fishing" ${P.profs.fish?"":"disabled"}>🎣 垂釣</button></b></div>`;
+  }
+  if(b.teach){
+    html+=`<div style="font-size:12px;color:var(--moon-dim);margin:10px 0 2px">— 拜師學藝（主要限 ${PRIMARY_MAX} 門，次要不限） —</div>`;
+    b.teach.forEach(k=>{
+      const info=PROFS[k],learned=!!P.profs[k],bonus=profBonus(k);
+      html+=`<div class="stat-row"><span>${info.icon} ${info.name}（${info.tier==="primary"?"主要·"+info.kind:"次要"}）${bonus?`<span class="ok" style="font-size:11px"> 親和+${bonus}</span>`:""}</span>
+        <b>${learned?`<span class="ok">已學會</span>`:`<button class="mini" data-learn="${k}">學習 ${CFG.learnCost} 銅</button>`}</b></div>`;
+    });
+  }
+  const qs=questsAt(bid);
+  if(qs.length){
+    html+=`<div style="font-size:12px;color:var(--moon-dim);margin:10px 0 4px">— 委託 —</div>`;
+    qs.forEach(qid=>{
+      const q=QUESTS[qid],s=questState(qid);
+      if(s===3){html+=`<div class="q-item done-forever"><span class="qn">✓ ${q.name}</span><div class="qc">已完成。</div></div>`;return;}
+      if(s===0){
+        if(P.lv>=q.lvReq)
+          html+=`<div class="q-item"><span class="qn">！ ${q.name}</span><div class="qc">${q.clue}</div>
+            <div class="qp">報酬：${q.reward.copper} 銅 + ${q.reward.xp} 經驗${q.reward.item?`＋${q.reward.item[0]}×${q.reward.item[1]}`:""}</div>
+            <button class="mini" data-accept="${qid}" style="margin-top:4px">接受委託</button></div>`;
+        else
+          html+=`<div class="q-item done-forever"><span class="qn">${q.name}</span><div class="qc">（需 Lv.${q.lvReq}）</div></div>`;
+      }else{
+        const prog=q.type==="kill"?`${P.quests[qid].p}/${q.n}`:`${Math.min(P.inv[q.item]||0,q.n)}/${q.n}（${q.item}）`;
+        html+=`<div class="q-item"><span class="qn">${s===2?"？":"…"} ${q.name}</span><div class="qc">${q.clue}</div>
+          <div class="qp">進度：${prog}</div>
+          ${s===2?`<button class="mini" data-turnin="${qid}" style="margin-top:4px">回報完成</button>`:""}</div>`;
+      }
+    });
+  }
+  body.innerHTML=html;
+  body.querySelectorAll("[data-act]").forEach(btn=>btn.onclick=()=>{
+    if(btn.dataset.act==="rest"){
+      if(P.copper<CFG.restCost){log("銅幣不夠住店。","sys");return;}
+      P.copper-=CFG.restCost;P.hp=hpMax();sfx.coin();
+      log(`你在旅店睡了個好覺，醒來時渾身是勁。（HP 全滿）`,"npc");
+      saveAcc();openBuilding(bid);refreshUI();
+    }
+    if(btn.dataset.act==="repair"){
+      const cost=P.equip.reduce((a,e)=>a+Math.ceil((e.max-e.dur)*CFG.repairRate),0);
+      if(cost<=0)return;
+      if(P.copper<cost){log("銅幣不夠修理。","sys");return;}
+      P.copper-=cost;P.equip.forEach(e=>e.dur=e.max);sfx.coin();
+      log(`老鄧把裝備修得跟新的一樣。（−${cost} 銅）`,"npc");
+      saveAcc();openBuilding(bid);refreshUI();
+    }
+    if(btn.dataset.act==="fishing"){tryFish();openBuilding(bid);}
+  });
+  body.querySelectorAll("[data-learn]").forEach(btn=>btn.onclick=()=>{learnProf(btn.dataset.learn);openBuilding(bid);});
+  body.querySelectorAll("[data-buy]").forEach(btn=>btn.onclick=()=>{
+    const k=btn.dataset.buy,it=ITEMS[k];
+    if(P.copper<it.buy){log("銅幣不夠。","sys");return;}
+    P.copper-=it.buy;P.inv[k]=(P.inv[k]||0)+1;sfx.coin();
+    log(`買入 ${k}（−${it.buy} 銅）。`,"loot");
+    saveAcc();openBuilding(bid);refreshUI();
+  });
+  body.querySelectorAll("[data-sell]").forEach(btn=>btn.onclick=()=>{
+    const k=btn.dataset.sell;
+    if(!(P.inv[k]>0))return;
+    P.inv[k]--;P.copper+=ITEMS[k].sell;sfx.coin();
+    log(`賣出 ${k}（+${ITEMS[k].sell} 銅）。`,"loot");
+    saveAcc();openBuilding(bid);refreshUI();
+  });
+  body.querySelectorAll("[data-sellall]").forEach(btn=>btn.onclick=()=>{
+    const k=btn.dataset.sellall,n=P.inv[k]||0;
+    if(n<=0)return;
+    P.inv[k]=0;P.copper+=ITEMS[k].sell*n;sfx.coin();
+    log(`賣出 ${k}×${n}（+${ITEMS[k].sell*n} 銅）。`,"loot");
+    saveAcc();openBuilding(bid);refreshUI();
+  });
+  body.querySelectorAll("[data-accept]").forEach(btn=>btn.onclick=()=>{
+    const qid=btn.dataset.accept;
+    P.quests[qid]={p:0,done:false};
+    sfx.quest();
+    log(`📜 接受委託：<b>${QUESTS[qid].name}</b>——${QUESTS[qid].clue}`,"gold");
+    saveAcc();openBuilding(bid);renderVillage();
+  });
+  body.querySelectorAll("[data-turnin]").forEach(btn=>btn.onclick=()=>{
+    const qid=btn.dataset.turnin,q=QUESTS[qid];
+    if(questState(qid)!==2)return;
+    if(q.type==="collect")P.inv[q.item]-=q.n;
+    P.quests[qid]={done:true};
+    P.copper+=q.reward.copper;
+    P.stats.questsDone=(P.stats.questsDone||0)+1;
+    sfx.quest();
+    log(`✅ <b>委託完成：${q.name}</b>！獲得 ${q.reward.copper} 銅。`,"gold");
+    if(q.reward.item){P.inv[q.reward.item[0]]=(P.inv[q.reward.item[0]]||0)+q.reward.item[1];
+      log(`額外獲得：${q.reward.item[0]}×${q.reward.item[1]}。`,"loot");}
+    gainXP(q.reward.xp);
+    saveAcc();openBuilding(bid);renderVillage();refreshUI();
+  });
+  $("panel-npc").classList.add("show");
+}
+
+/* ============ 地圖選擇 ============ */
+function openZone(){
+  const b=$("zone-body");b.innerHTML="";
+  ZONES.forEach(z=>{
+    const locked=P.lv<z.lvReq;
+    const d=document.createElement("button");
+    d.className="zone-card"+(P.zone===z.id?" on":"")+(locked?" locked":"");
+    d.innerHTML=`<b>${z.village?"🏘️ ":""}${z.name}</b> <span style="font-size:11px;color:var(--moon-dim)">${z.village?"":"（需 Lv."+z.lvReq+"）"}</span>
+      <div class="zd">${z.desc}</div>`;
+    d.disabled=locked;
+    d.onclick=()=>{
+      stopCamp(false);
+      P.zone=z.id;applyZone();saveAcc();
+      $("panel-zone").classList.remove("show");
+      log(`你動身前往<b>${z.name}</b>。`,"sys");
+      refreshUI();
+    };
+    b.appendChild(d);
+  });
+  $("panel-zone").classList.add("show");
+}
+
+/* ============ 怪物 ============ */
+function spawnMob(kind){
+  const m=MONS[kind];
+  const w={id:++mobSeq,kind,hp:m.hp,hpMax:m.hp,
+    atkTimer:rnd(0.4,1.4),spd:m.spd,
+    howled:false,casting:0,castKind:null,fled:false,
+    chargeTimer:m.ai==="charge"?m.chargeEvery*rnd(.5,.9):0,
+    stun:0,enraged:false};
+  mobs.push(w);renderMobs();return w;
+}
+function renderMobs(){
+  const box=$("enemies");box.innerHTML="";
+  mobs.forEach((w,i)=>{
+    const m=MONS[w.kind];
+    const d=document.createElement("div");
+    d.className="mob"+(m.big?" big":"")+(m.elite?" elite":"")+(i===targetIdx()?" target":"")
+      +(w.casting>0?" casting":"")+(w.enraged?" enrage":"");
+    d.id="mob-"+w.id;
+    d.innerHTML=`<div class="tag">目標</div>
+      <div class="icon" style="${m.grey?"filter:saturate(.3) brightness(1.15);":""}">${m.icon}</div>
+      <div class="nm">${m.name}</div><div class="lv">Lv.${m.lv}${m.elite?" · 精英":""}</div>
+      <div class="hp"><i style="transform:scaleX(${w.hp/w.hpMax})"></i></div>
+      <div class="cast"><i></i></div>`;
+    d.querySelector(".tag").style.display=(i===targetIdx()&&mobs.length>1)?"block":"none";
+    d.onclick=()=>{targetId=w.id;renderMobs();};
+    box.appendChild(d);
+  });
+}
+function targetIdx(){
+  let i=mobs.findIndex(w=>w.id===targetId&&w.hp>0);
+  if(i<0){i=mobs.findIndex(w=>w.hp>0);targetId=i>=0?mobs[i].id:null;}
+  return i;
+}
+function updateMobBar(w){
+  const el=$("mob-"+w.id);if(!el)return;
+  const m=MONS[w.kind];
+  el.querySelector(".hp i").style.transform=`scaleX(${Math.max(0,w.hp/w.hpMax)})`;
+  const c=el.querySelector(".cast");
+  c.style.visibility=w.casting>0?"visible":"hidden";
+  if(w.casting>0){
+    const total=w.castKind==="howl"?m.howlCast:m.chargeCast;
+    c.querySelector("i").style.transform=`scaleX(${1-w.casting/total})`;
+  }
+  el.classList.toggle("casting",w.casting>0);
+  el.classList.toggle("enrage",!!w.enraged);
+}
+
+/* ============ 戰鬥 ============ */
+function startCombat(kinds){
+  inCombat=true;combatStart=now;combatN0=kinds.length;
+  P.stats.battles++;P.atkTimer=0.5;pendingSupport=null;
+  stopEating("戰鬥打斷了進食。");
+  mobs=[];kinds.forEach(k=>spawnMob(k));
+  targetId=mobs[0].id;
+  const names=kinds.map(k=>MONS[k].name);
+  const elite=kinds.some(k=>MONS[k].elite);
+  if(elite){
+    if(autoBattle){autoBattle=false;log(`⚠ <b>自動狩獵中斷</b>——精英現身，這一戰得由你親自打。`,"warn");}
+    $("scene-caption").textContent="⚠ 獨眼的巨影從黑暗中走出——狼王現身！";
+    log(`👑 <b>精英現身：獨眼狼王！</b>灰羽警告過你的傳聞是真的。逃跑還來得及……`,"gold");
+    sfx.howl();shake();
+  }else{
+    $("scene-caption").textContent=kinds.length===1?`${names[0]}撲了上來！`:`${names.join("、")}圍了上來！`;
+    log(`—— 遭遇 ${names.join("、")} ——`,"sys");
+  }
+  renderMobs();refreshUI();
+}
+function endCombat(){
+  inCombat=false;mobs=[];pendingSupport=null;P.sk1Primed=false;
+  if(resCfg().combatOnly)P.resVal=0;
+  $("enemies").innerHTML="";
+  const z=zoneById(P.zone);
+  $("scene-caption").textContent=z.idle[ri(0,z.idle.length-1)];
+  renderMobs();refreshUI();saveAcc();
+}
+function gainRes(base){
+  P.resVal=Math.min(resCfg().max,P.resVal+base*raceMod("res",1)*(P.stance?CFG.stanceRes:1));
+}
+function playerHit(base,skillTag,verb){
+  const i=targetIdx();if(i<0)return;
+  const w=mobs[i],m=MONS[w.kind];
+  let dmg=base;
+  const crit=Math.random()<critCh();
+  if(crit)dmg*=2;
+  dmg*=(1-CFG.armorReduce(m.armor));
+  dmg=Math.max(1,Math.round(dmg));
+  w.hp-=dmg;
+  const av=$("player-avatar");
+  av.classList.add("lunge");setTimeout(()=>av.classList.remove("lunge"),110);
+  const el=$("mob-"+w.id);
+  if(el){el.classList.remove("hit","hitflash");void el.offsetWidth;el.classList.add("hit","hitflash");
+    floatNum(el,crit?dmg+"!":String(dmg),crit?"crit":"normal");}
+  if(crit){flash();sfx.crit();}else sfx.hit();
+  updateMobBar(w);
+  if(resCfg().combatOnly)gainRes(CFG.resource.rage.perHit);
+  const c=CLASSES[P.cls];
+  if(P.stance&&c.sk2.lifesteal){
+    const h=Math.max(1,Math.round(dmg*c.sk2.lifesteal));
+    P.hp=Math.min(hpMax(),P.hp+h);
+    floatNum(av,"+"+h,"heal");
+  }
+  log(`你以${verb}命中${m.name}，造成 <span class="${crit?"crit":"dmg"}">${dmg}${crit?"（爆擊！）":""}</span> 點傷害。`,"me");
+  if(skillTag==="sk3"&&w.casting>0){
+    const what=w.castKind==="howl"?"嚎叫":"衝鋒";
+    w.casting=0;w.castKind=null;
+    if(what==="嚎叫")w.howled=true;else w.chargeTimer=m.chargeEvery;
+    P.stats.interrupts++;updateMobBar(w);
+    log(`⚔️ 你的${c.sk3.name}打斷了${m.name}的${what}！`,"crit");
+    sfx.crit();
+  }
+  if(w.hp<=0)mobDies(w);
+}
+function questKillProgress(kind){
+  QUEST_ORDER.forEach(qid=>{
+    const q=QUESTS[qid],st=P.quests[qid];
+    if(!st||st.done||q.type!=="kill"||q.kind!==kind)return;
+    if(st.p<q.n){
+      st.p++;
+      if(st.p>=q.n){sfx.quest();log(`📜 <b>${q.name}</b>：${st.p}/${q.n} —— <b>完成了！回村向${BUILDINGS.find(b=>b.id===q.giver).npc||"告示板"}回報吧。</b>`,"gold");}
+      else log(`📜 ${q.name}：${st.p}/${q.n}`,"gold");
+    }
+  });
+}
+function trySkin(m){
+  if(!P.profs.skin||!m.skin)return null;
+  if(Math.random()<0.8){
+    P.inv[m.skin]=(P.inv[m.skin]||0)+1;
+    profUp("skin",1);
+    return m.skin;
+  }
+  return null;
+}
+function mobDies(w){
+  const m=MONS[w.kind];
+  P.stats.kills++;
+  if(combatN0===1&&w.kind==="pup"&&!autoBattle)
+    P.stats.ttkList.push(now-combatStart);
+  const el=$("mob-"+w.id);if(el)el.classList.add("dying");
+  sfx.kill();
+  log(`${m.name}倒下了。`,"sys");
+  let got=[],rare=false;
+  m.drops.forEach(d=>{const[name,ch,isRare]=d;
+    if(Math.random()<ch){P.inv[name]=(P.inv[name]||0)+1;
+      if(isRare){got.push(`<b>【${ITEMS[name]&&ITEMS[name].weapon?"武器":"稀有"}】${name}</b>`);rare=true;}
+      else got.push(name);}});
+  const skinGot=trySkin(m);
+  if(skinGot)got.push(`🔪${skinGot}（剝皮）`);
+  const coins=ri(1,3)*m.lv;P.copper+=coins;got.push(`銅幣×${coins}`);
+  log(`拾取：<span class="loot">${got.join("、")}</span>`,"loot");
+  if(rare){sfx.rare();log(`✦ 稀有收穫——打開背包看看吧。`,"gold");}else sfx.loot();
+  questKillProgress(w.kind);
+  gainXP(m.xp,true);
+  mobs=mobs.filter(x=>x!==w);
+  targetId=null;
+  setTimeout(()=>{renderMobs();
+    if(inCombat&&mobs.length===0&&!pendingSupport)endCombat();},480);
+}
+let autoXpWarned=false;
+function gainXP(x,fromMob){
+  if(fromMob&&autoBattle){
+    if(!autoXpWarned){autoXpWarned=true;
+      log(`（自動狩獵只帶回戰利品，<b>不會獲得經驗</b>——升級就是遊戲，得親手打。）`,"sys");}
+    return;
+  }
+  x=Math.round(x*raceMod("xp",1));
+  P.xp+=x;
+  log(`獲得 ${x} 點經驗。`,"sys");
+  const need=CFG.player.xpForLv(P.lv);
+  if(P.xp>=need){
+    P.xp-=need;P.lv++;P.hp=hpMax();
+    const lvEl=document.getElementById("lv");if(lvEl)lvEl.textContent="Lv."+P.lv;
+    sfx.level();
+    $("lvlup-t").textContent="Lv."+P.lv;
+    $("lvlup-s").textContent="生命 +8 · 攻擊 +1 · 護甲 +3";
+    const lu=$("lvlup");lu.classList.remove("show");void lu.offsetWidth;lu.classList.add("show");
+    setTimeout(()=>lu.classList.remove("show"),2300);
+    log(`✨ <b>升級！${P.name} 現在是 Lv.${P.lv}。</b>`,"gold");
+    const unlocked=ZONES.find(z=>z.lvReq===P.lv&&!z.village);
+    if(unlocked)log(`🗺️ 新獵場開放：<b>${unlocked.name}</b>——按「地圖」前往。`,"gold");
+    renderVillage();
+  }
+}
+function mobAttacks(w,mult){
+  const m=MONS[w.kind];
+  let dmg=rnd(m.atkMin,m.atkMax)*(mult||1);
+  let blocked=false;
+  if(mult&&mult>1&&P.stance){
+    dmg*=0.35;blocked=true;w.stun=2.5;P.stats.blocks=(P.stats.blocks||0)+1;
+  }
+  dmg*=(1-CFG.armorReduce(armor()));
+  dmg=Math.max(1,Math.round(dmg));
+  P.hp-=dmg;
+  if(resCfg().combatOnly)gainRes(CFG.resource.rage.perTaken);
+  const av=$("player-avatar");
+  av.classList.remove("hit");void av.offsetWidth;av.classList.add("hit");
+  floatNum(av,"-"+dmg,"taken");
+  sfx.hurt();
+  if(mult&&mult>1)shake();
+  if(blocked)log(`🛡️ <b>你穩穩擋下了衝鋒！</b>${m.name}被震得暈頭轉向（僅受 ${dmg} 傷害）。`,"crit");
+  else log(`${m.name}${mult&&mult>1?"猛烈衝撞":"攻擊"}你，受到 <span class="dmg">${dmg}</span> 點傷害。`);
+  if(P.hp<=0)playerDies();
+}
+function playerDies(){
+  P.stats.deaths++;
+  P.equip.forEach(e=>e.dur=Math.max(0,e.dur-10));
+  shake();
+  autoBattle=false;
+  log(`💀 <b>你倒下了。</b>裝備耐久 −10%。你在溪畔村的火堆旁醒來。`,"warn");
+  if(weaponBroken())log(`⚠️ ${P.equip[0].name}已損壞（攻擊力減半）——去村裡找老鄧修理。`,"warn");
+  P.hp=Math.round(hpMax()*0.5);P.stance=false;
+  P.zone="village";
+  endCombat();
+  applyZone();
+}
+
+/* ============ 技能 ============ */
+function canSk1(){const c=CLASSES[P.cls].sk1;return inCombat&&P.resVal>=c.cost&&!(c.kind==="prime"&&P.sk1Primed);}
+function canSk3(){const c=CLASSES[P.cls].sk3;return inCombat&&P.resVal>=c.cost&&now>=P.sk3ReadyAt;}
+function useSk1(){
+  const c=CLASSES[P.cls].sk1;
+  if(!canSk1())return;
+  pressFx("sk1");sfx.skill();
+  if(c.kind==="prime"){
+    P.resVal-=c.cost;P.sk1Primed=true;P.stats.sk1Use++;
+    log(`你蓄力——下一次攻擊將更加猛烈。（${c.name}）`,"me");
+  }else{
+    P.resVal-=c.cost;P.stats.sk1Use++;
+    let base=rnd(c.dmg[0],c.dmg[1])*(P.stance?CFG.stanceDmg:1)*(weaponBroken()?0.5:1);
+    playerHit(base,"sk1","以"+CLASSES[P.cls].sk1.name);
+    if(c.heal){P.hp=Math.min(hpMax(),P.hp+c.heal);floatNum($("player-avatar"),"+"+c.heal,"heal");}
+  }
+  refreshUI();
+}
+function useSk2(){
+  const c=CLASSES[P.cls].sk2;
+  pressFx("sk2");sfx.skill();
+  P.stance=!P.stance;P.stats.sk2Toggle++;
+  log(P.stance?`🛡️ 你進入<b>${c.name}</b>（${c.desc}）。`:`你解除了${c.name}。`,"me");
+  refreshUI();
+}
+function useSk3(){
+  const c=CLASSES[P.cls].sk3;
+  if(!canSk3())return;
+  const i=targetIdx();if(i<0)return;
+  pressFx("sk3");sfx.skill();
+  P.resVal-=c.cost;P.sk3ReadyAt=now+sk3CD();P.stats.sk3Use++;
+  const w=mobs[i];
+  let base=rnd(c.min,c.max)*(P.stance?CFG.stanceDmg:1)*(weaponBroken()?0.5:1);
+  if(w.hp/w.hpMax<CFG.sk3.execTh){base*=CFG.sk3.execMult;log(`⚡ ${c.name}——處決！`,"crit");}
+  playerHit(base,"sk3","以"+c.name);
+  refreshUI();
+}
+
+/* ============ 自動戰鬥 / 紮營 ============ */
+function toggleAuto(){
+  if(inVillage()){log("村子裡不用拔劍。到獵場再開自動狩獵。","sys");return;}
+  if(P.camping){log("紮營中無法自動狩獵——先拔營。","sys");return;}
+  autoBattle=!autoBattle;
+  autoXpWarned=false;
+  log(autoBattle
+    ?`⚔ <b>自動狩獵：開</b>。角色會自行探索、戰鬥、進食與撿拾戰利品。<br><span style="font-size:11px">（依 Canon：自動擊殺不獲得主等級經驗；遇到精英會自動暫停。）</span>`
+    :`⚔ 自動狩獵：關。`,autoBattle?"gold":"sys");
+  refreshUI();
+}
+function toggleCamp(){
+  if(inCombat){log("戰鬥中無法紮營。","warn");return;}
+  if(inVillage()){log("村子裡有旅店，何必紮營？","sys");return;}
+  if(P.camping){stopCamp(true);return;}
+  autoBattle=false;
+  P.camping=true;campAccum=0;
+  applyZone();
+  const gathers=[P.profs.herb&&"藥草",P.profs.mine&&"礦石",P.profs.skin&&"獸皮"].filter(Boolean).join("、");
+  log(`⛺ <b>你在${zoneById(P.zone).name}紮了營。</b>角色會慢慢採集素材與少量銅幣${gathers?`（${gathers}＋熟練度）`:""}——<b>但不會獲得經驗</b>。離線也持續（效率 ${OFFLINE_EFF*100}%，上限 ${OFFLINE_CAP_H} 小時）。`,"gold");
+  saveAcc();refreshUI();
+}
+function stopCamp(verbose){
+  if(!P.camping)return;
+  P.camping=false;campAccum=0;
+  applyZone();
+  if(verbose)log(`你收起了營帳。`,"sys");
+  saveAcc();refreshUI();
+}
+function campTick(){
+  const z=zoneById(P.zone);
+  let got=[];
+  const coins=ri(0,2);
+  if(coins>0){P.copper+=coins;got.push(`銅幣×${coins}`);}
+  if(Math.random()<.40){const m=z.campMat[ri(0,z.campMat.length-1)];P.inv[m]=(P.inv[m]||0)+1;got.push(m);}
+  if(P.profs.herb&&Math.random()<.35){P.inv[z.herb]=(P.inv[z.herb]||0)+1;profUp("herb",1);got.push(z.herb);}
+  if(P.profs.mine&&Math.random()<.28){P.inv[z.ore]=(P.inv[z.ore]||0)+1;profUp("mine",1);got.push(z.ore);}
+  if(P.profs.skin&&Math.random()<.25){P.inv[z.campMat[0]]=(P.inv[z.campMat[0]]||0)+1;profUp("skin",1);got.push(z.campMat[0]+"（剝皮）");}
+  if(got.length)log(`⛺ 營地收穫：<span class="loot">${got.join("、")}</span>`,"prof");
+}
+function autoLogic(){
+  if(!autoBattle||inVillage()||P.camping)return;
+  if(!inCombat){
+    if(eating)return;
+    const hpr=P.hp/hpMax();
+    if(hpr>=0.6)explore();
+    else if(bestFood())eat();
+  }else{
+    const i=targetIdx();if(i<0)return;
+    const w=mobs[i];
+    if(w.casting>0&&canSk3()){useSk3();return;}
+    if(w.hp/w.hpMax<CFG.sk3.execTh&&canSk3()){useSk3();return;}
+    if(canSk1()&&P.resVal>=CLASSES[P.cls].sk1.cost+20)useSk1();
+  }
+}
+
+/* ============ 探索 / 進食 / 逃跑 / 消耗品 ============ */
+function explore(){
+  if(inCombat||eating||!P)return;
+  if(P.camping){stopCamp(true);}
+  if(inVillage()){openZone();return;}
+  startCombat(zoneById(P.zone).roll());
+}
+function bestFood(){
+  return Object.keys(ITEMS).filter(k=>ITEMS[k].food&&P.inv[k]>0)
+    .sort((a,b)=>ITEMS[b].food-ITEMS[a].food)[0]||null;
+}
+function eat(){
+  if(inCombat||eating)return;
+  const f=bestFood();
+  if(!f){log(`背包裡沒有食物——雜貨店有賣乾糧，學烹飪還能自己烤。`,"sys");return;}
+  if(P.hp>=hpMax()){log(`你並不餓。`,"sys");return;}
+  P.inv[f]--;
+  eating={until:now+CFG.eatDur,rate:ITEMS[f].food/CFG.eatDur};
+  $("scene-caption").textContent=`你坐在火堆旁，吃起了${f}……`;
+  log(`你坐下進食${f}（${CFG.eatDur} 秒內恢復 ${ITEMS[f].food} HP）。`,"sys");
+  refreshUI();
+}
+function stopEating(msg){if(eating){eating=null;if(msg)log(msg,"sys");}}
+function drinkPotion(name){
+  const it=ITEMS[name];
+  if(!it||!it.potion||!(P.inv[name]>0))return;
+  if(P.hp>=hpMax()){log("你的狀態很好，不用喝藥。","sys");return;}
+  P.inv[name]--;
+  P.hp=Math.min(hpMax(),P.hp+it.potion);
+  floatNum($("player-avatar"),"+"+it.potion,"heal");
+  sfx.gather();
+  log(`⚗️ 你喝下${name}，恢復 ${it.potion} HP。${inCombat?"（戰鬥中！）":""}`,"prof");
+  saveAcc();refreshUI();
+}
+function useBandage(name){
+  const it=ITEMS[name];
+  if(!it||!it.band||!(P.inv[name]>0))return;
+  if(now<P.bandAt){log(`剛包紮過，傷口還沒定（${Math.ceil(P.bandAt-now)} 秒）。`,"sys");return;}
+  if(P.hp>=hpMax()){log("你沒有需要包紮的傷口。","sys");return;}
+  P.inv[name]--;
+  P.bandAt=now+CFG.bandCD;
+  P.hp=Math.min(hpMax(),P.hp+it.band);
+  floatNum($("player-avatar"),"+"+it.band,"heal");
+  profUp("aid",1);
+  sfx.gather();
+  log(`🩹 你迅速包紮傷口，恢復 ${it.band} HP。${inCombat?"（戰鬥中！）":""}`,"prof");
+  saveAcc();refreshUI();
+}
+function useBomb(name){
+  const it=ITEMS[name];
+  if(!it||!it.bomb||!(P.inv[name]>0))return;
+  if(!inCombat){log("現在丟炸彈只會炸到自己的腳。","sys");return;}
+  const i=targetIdx();if(i<0)return;
+  const w=mobs[i],m=MONS[w.kind];
+  P.inv[name]--;
+  const dmg=it.bomb;
+  w.hp-=dmg;
+  if(it.stun)w.stun=Math.max(w.stun,it.stun);
+  sfx.boom();shake();
+  const el=$("mob-"+w.id);
+  if(el){el.classList.remove("hit");void el.offsetWidth;el.classList.add("hit");
+    floatNum(el,dmg+"!","crit");}
+  updateMobBar(w);
+  log(`💥 <b>${name}</b>在${m.name}腳下炸開，造成 <span class="crit">${dmg}</span> 點傷害${it.stun?`＋暈眩 ${it.stun} 秒`:""}！`,"gold");
+  if(w.hp<=0)mobDies(w);
+  saveAcc();refreshUI();
+}
+function flee(){
+  if(!inCombat)return;
+  P.stats.flees++;
+  autoBattle=false;
+  mobs.forEach(w=>{if(w.hp>0)mobAttacks(w);});
+  if(P.hp>0){log(`你轉身衝出戰場——每頭野獸都在你身上留下了一道傷。`,"warn");endCombat();}
+  refreshUI();
+}
+
+/* ============ 主迴圈 ============ */
+function tick(){
+  now+=TICK/1000;
+  if(!P||!$("scr-game").classList.contains("show"))return;
+  P.stats.playTime+=TICK/1000;
+  const rc=resCfg();
+  if(rc.regen)P.resVal=Math.min(rc.max,P.resVal+rc.regen*TICK/1000);
+  if(rc.regenIn!==undefined)
+    P.resVal=Math.min(rc.max,P.resVal+(inCombat?rc.regenIn:rc.regenOut)*TICK/1000);
+  autoLogic();
+  if(P.camping&&!inCombat){
+    campAccum+=TICK/1000;
+    if(campAccum>=CAMP_TICK_SEC){campAccum=0;campTick();}
+  }
+  if(inCombat){
+    P.atkTimer-=TICK/1000;
+    if(P.atkTimer<=0){
+      P.atkTimer=CFG.player.atkSpeed;
+      let base=rnd(atkMin(),atkMax())*(P.stance?CFG.stanceDmg:1)*(weaponBroken()?0.5:1);
+      const c=CLASSES[P.cls];
+      if(P.sk1Primed){base+=c.sk1.bonus;P.sk1Primed=false;
+        playerHit(base,null,`奮力的${c.auto}（${c.sk1.name}）`);}
+      else playerHit(base,null,c.auto);
+    }
+    mobs.slice().forEach(w=>{
+      if(w.hp<=0)return;
+      const m=MONS[w.kind];
+      if(w.stun>0){w.stun-=TICK/1000;return;}
+      if(m.enrageTh&&!w.enraged&&w.hp/w.hpMax<m.enrageTh){
+        w.enraged=true;w.spd=m.enrageSpd;
+        log(`🔥 <b>${m.name}獨眼赤紅——陷入狂怒！攻擊速度大幅提升！</b>`,"warn");
+        sfx.howl();shake();renderMobs();
+      }
+      if(m.ai==="howl"&&!w.howled&&w.casting<=0&&w.hp/w.hpMax<m.howlTh){
+        w.casting=m.howlCast;w.castKind="howl";
+        log(`🌙 ${m.name}仰頭欲嚎——<b>打斷它！</b>（前搖 ${m.howlCast} 秒）`,"warn");
+      }
+      if(m.ai==="charge"){
+        w.chargeTimer-=TICK/1000;
+        if(w.chargeTimer<=0&&w.casting<=0){
+          w.casting=m.chargeCast;w.castKind="charge";w.chargeTimer=m.chargeEvery;
+          log(`🐗 ${m.name}低頭刨地，準備<b>衝鋒</b>——打斷它，或開啟姿態技硬擋反制！`,"warn");
+        }
+      }
+      if(w.casting>0){
+        w.casting-=TICK/1000;updateMobBar(w);
+        if(w.casting<=0){
+          if(w.castKind==="howl"){
+            w.howled=true;P.stats.howlsLanded++;
+            log(`嚎叫聲迴盪林間……<b>援軍將在 ${m.supportDelay} 秒後抵達</b>——這是你的逃跑窗口。`,"warn");
+            sfx.howl();
+            pendingSupport={at:now+m.supportDelay};
+          }else if(w.castKind==="charge"){
+            mobAttacks(w,m.chargeMult);
+          }
+          w.castKind=null;updateMobBar(w);
+        }
+        return;
+      }
+      if(m.fleeTh&&w.howled&&w.hp/w.hpMax<m.fleeTh&&!w.fled){
+        w.fled=true;
+        log(`重傷的${m.name}夾著尾巴逃進了森林深處。`,"sys");
+        mobs=mobs.filter(x=>x!==w);renderMobs();
+        if(mobs.length===0&&!pendingSupport)endCombat();
+        return;
+      }
+      w.atkTimer-=TICK/1000;
+      if(w.atkTimer<=0){w.atkTimer=w.spd;mobAttacks(w);}
+    });
+    if(pendingSupport&&now>=pendingSupport.at){
+      pendingSupport=null;
+      if(inCombat){spawnMob("pup");log(`一隻幼狼循聲趕到！`,"warn");}
+    }
+    if(inCombat&&mobs.length===0&&!pendingSupport)endCombat();
+  }else{
+    if(P.hp<hpMax()){
+      P.hp=Math.min(hpMax(),P.hp+CFG.player.regenOOC*raceMod("regen",1)*TICK/1000+(eating?eating.rate*TICK/1000:0));
+    }
+    if(eating&&(now>=eating.until||P.hp>=hpMax())){
+      eating=null;
+      const z=zoneById(P.zone);
+      $("scene-caption").textContent=P.camping?`⛺ 你在${z.name}紮了營，火光搖曳。`:z.idle[ri(0,z.idle.length-1)];
+      log(`你吃飽了，精神好多了。`,"sys");
+    }
+  }
+  refreshUI();
+}
+
+/* ============ UI 更新 ============ */
+function refreshUI(){
+  if(!P)return;
+  const c=CLASSES[P.cls],rc=resCfg();
+  const hpr=P.hp/hpMax();
+  $("hp-fill").style.transform=`scaleX(${Math.max(0,hpr)})`;
+  $("hp-txt").textContent=`HP ${Math.ceil(P.hp)} / ${hpMax()}`;
+  $("hp-bar").classList.toggle("low",inCombat&&hpr<0.3);
+  $("res-fill").style.transform=`scaleX(${P.resVal/rc.max})`;
+  $("res-txt").textContent=`${rc.label} ${Math.floor(P.resVal)}`;
+  const need=CFG.player.xpForLv(P.lv);
+  $("xp-fill").style.transform=`scaleX(${P.xp/need})`;
+  $("xp-txt").textContent=`${P.xp}/${need}`;
+  $("player-state").innerHTML=(P.stance?`🛡️ ${c.sk2.name}<br>`:"")+(eating?"🍖 進食中<br>":"")+
+    (P.camping?"⛺ 紮營中<br>":"")+(autoBattle?"⚔ 自動狩獵<br>":"")+
+    (weaponBroken()?"<span style='color:var(--blood)'>⚠ 武器損壞</span>":"");
+  $("sk1").disabled=!canSk1();
+  $("sk2").classList.toggle("on",P.stance);
+  const cdLeft=Math.max(0,P.sk3ReadyAt-now);
+  $("sk3").disabled=!canSk3();
+  $("sk3cd").style.transform=`scaleX(${cdLeft>0?cdLeft/sk3CD():0})`;
+  $("btn-explore").textContent=inVillage()?"外出打獵":"探索";
+  $("btn-explore").disabled=inCombat||!!eating;
+  $("btn-auto").classList.toggle("on",autoBattle);
+  $("btn-auto").disabled=inVillage()||P.camping;
+  $("btn-camp").classList.toggle("on",P.camping);
+  $("btn-camp").textContent=P.camping?"⛺ 拔營":"⛺ 紮營";
+  $("btn-camp").disabled=inCombat||inVillage();
+  $("btn-eat").disabled=inCombat||!!eating;
+  const b4=$("btn-4");
+  if(inCombat){b4.textContent="逃跑 (F)";b4.disabled=false;}
+  else{
+    const cd=Math.max(0,Math.ceil(P.gatherAt-now));
+    b4.textContent=cd>0?`採集 ${cd}s`:"採集 (G)";
+    b4.disabled=!!eating||inVillage()||P.camping||(!P.profs.herb&&!P.profs.mine)||cd>0;
+  }
+}
+
+/* ============ 背包 / 任務日誌 / 統計 ============ */
+function openBag(){
+  const b=$("bag-body");
+  let html=`<div class="stat-row"><span>銅幣</span><b>${P.copper}</b></div>`;
+  html+=`<div class="stat-row"><span>武器</span><b>${P.weaponName}${P.weaponAtk?`（攻+${P.weaponAtk}）`:""}${P.equip[0].ench?`<span class="ok">✨附魔+${P.equip[0].ench}</span>`:""} · 耐久 ${P.equip[0].dur}/${P.equip[0].max}</b></div>`;
+  html+=`<div class="stat-row"><span>防具</span><b>${P.equip[1].name}${P.equip[1].armor?`（甲+${P.equip[1].armor}）`:""}${P.equip[1].ench?`<span class="ok">✨附魔+${P.equip[1].ench}</span>`:""} · 耐久 ${P.equip[1].dur}/${P.equip[1].max}</b></div>`;
+  const keys=Object.keys(P.inv).filter(k=>P.inv[k]>0);
+  if(keys.length===0)html+=`<div style="color:var(--moon-dim);margin-top:8px">背包空空如也——去松林裡走走吧。</div>`;
+  keys.forEach(k=>{
+    const it=ITEMS[k];
+    let extra="";
+    if(it&&it.weapon){
+      extra=`<button class="mini" data-equip="${k}">裝備（攻+${it.weapon}）</button>`;
+      if(P.profs.ench)extra+=` <button class="mini" data-de="${k}">分解</button>`;
+    }
+    else if(it&&it.armorEq){
+      extra=`<button class="mini" data-armor="${k}">穿上（甲+${it.armorEq}）</button>`;
+      if(P.profs.ench)extra+=` <button class="mini" data-de="${k}">分解</button>`;
+    }
+    else if(it&&it.potion)extra=`<button class="mini" data-drink="${k}">喝下（回${it.potion}）</button>`;
+    else if(it&&it.band){
+      const cd=Math.max(0,Math.ceil(P.bandAt-now));
+      extra=`<button class="mini" data-band="${k}" ${cd>0?"disabled":""}>${cd>0?`包紮 ${cd}s`:`包紮（回${it.band}）`}</button>`;
+    }
+    else if(it&&it.bomb)extra=`<button class="mini" data-bomb="${k}" ${inCombat?"":"disabled"}>${inCombat?`投擲（${it.bomb}傷）`:"戰鬥中可用"}</button>`;
+    else if(it&&it.food)extra=`<span style="font-size:11px;color:var(--moon-dim)">食物 · 回復${it.food}</span>`;
+    else if(it&&it.herb)extra=`<span style="font-size:11px;color:var(--moon-dim)">藥草 · 煉藥材料</span>`;
+    else if(it&&it.ore)extra=`<span style="font-size:11px;color:var(--moon-dim)">礦石 · 可熔煉</span>`;
+    else if(it&&it.sell)extra=`<span style="font-size:11px;color:var(--moon-dim)">素材 · 可售 ${it.sell} 銅</span>`;
+    html+=`<div class="stat-row"><span>${k} ×${P.inv[k]}</span><b>${extra}</b></div>`;
+  });
+  b.innerHTML=html;
+  b.querySelectorAll("[data-equip]").forEach(btn=>btn.onclick=()=>{
+    const name=btn.dataset.equip,it=ITEMS[name];
+    if(!it||!(P.inv[name]>0))return;
+    P.inv[name]--;
+    const hadEnch=P.equip[0].ench;
+    P.weaponName=name;P.weaponAtk=it.weapon;
+    P.equip[0]={name,dur:100,max:100,ench:0};
+    sfx.rare();
+    log(`⚔️ 你裝備了<b>${name}</b>（攻擊 +${it.weapon}）。${hadEnch?"<span class='ng'>舊武器的附魔隨之消散。</span>":""}`,"gold");
+    saveAcc();openBag();refreshUI();
+  });
+  b.querySelectorAll("[data-armor]").forEach(btn=>btn.onclick=()=>{
+    const name=btn.dataset.armor,it=ITEMS[name];
+    if(!it||!(P.inv[name]>0))return;
+    P.inv[name]--;
+    const hadEnch=P.equip[1].ench;
+    P.equip[1]={name,dur:100,max:100,armor:it.armorEq,ench:0};
+    sfx.rare();
+    log(`🛡️ 你穿上了<b>${name}</b>（護甲 +${it.armorEq}）。${hadEnch?"<span class='ng'>舊防具的附魔隨之消散。</span>":""}`,"gold");
+    saveAcc();openBag();refreshUI();
+  });
+  b.querySelectorAll("[data-de]").forEach(btn=>btn.onclick=()=>disenchant(btn.dataset.de));
+  b.querySelectorAll("[data-drink]").forEach(btn=>btn.onclick=()=>{drinkPotion(btn.dataset.drink);openBag();});
+  b.querySelectorAll("[data-band]").forEach(btn=>btn.onclick=()=>{useBandage(btn.dataset.band);openBag();});
+  b.querySelectorAll("[data-bomb]").forEach(btn=>btn.onclick=()=>{useBomb(btn.dataset.bomb);openBag();});
+  $("panel-bag").classList.add("show");
+}
+function openQuestLog(){
+  const b=$("quest-body");
+  let html="",active=0;
+  QUEST_ORDER.forEach(qid=>{
+    const q=QUESTS[qid],s=questState(qid);
+    if(s===1||s===2){
+      active++;
+      const giver=BUILDINGS.find(x=>x.id===q.giver);
+      const prog=q.type==="kill"?`${P.quests[qid].p}/${q.n}`:`${Math.min(P.inv[q.item]||0,q.n)}/${q.n}（${q.item}）`;
+      html+=`<div class="q-item"><span class="qn">${s===2?"？可回報":"…進行中"} ${q.name}</span>
+        <div class="qc">${q.clue}</div>
+        <div class="qp">進度：${prog}｜回報處：${giver.name}${giver.npc?("的"+giver.npc):""}</div></div>`;
+    }
+  });
+  const done=QUEST_ORDER.filter(q=>questState(q)===3).length;
+  if(!active)html+=`<div style="color:var(--moon-dim)">目前沒有進行中的委託。回溪畔村的告示板和村民那裡看看吧——金點標記表示有新委託。</div>`;
+  html+=`<div style="margin-top:10px;font-size:12px;color:var(--moon-dim)">已完成：${done} / ${QUEST_ORDER.length}。線索都在文字裡——本作沒有追蹤箭頭，讀懂村民的話，路就在腳下。</div>`;
+  b.innerHTML=html;
+  $("panel-quest").classList.add("show");
+}
+function openStats(){
+  const s=P.stats;
+  const avgTTK=s.ttkList.length?(s.ttkList.reduce((a,b)=>a+b,0)/s.ttkList.length).toFixed(1):"—";
+  const ttkOK=s.ttkList.length?(avgTTK>=11&&avgTTK<=13):null;
+  const profStr=PROF_ORDER.filter(k=>P.profs[k]).map(k=>`${PROFS[k].name} ${P.profs[k].lv}${profBonus(k)?`(+${profBonus(k)})`:""}`).join("、")||"—";
+  $("stats-body").innerHTML=`
+    <div class="stat-row"><span>角色</span><b>${RACES[P.race].name} ${CLASSES[P.cls].name} Lv.${P.lv}</b></div>
+    <div class="stat-row"><span>專業</span><b style="font-size:12px">${profStr}</b></div>
+    <div class="stat-row"><span>戰鬥場次</span><b>${s.battles}</b></div>
+    <div class="stat-row"><span>擊殺 / 死亡 / 逃跑</span><b>${s.kills} / ${s.deaths} / ${s.flees}</b></div>
+    <div class="stat-row"><span>完成委託 / 製作 / 採集</span><b>${s.questsDone||0} / ${s.crafts||0} / ${s.gathers||0}</b></div>
+    <div class="stat-row"><span>單隻幼狼平均 TTK（目標 11–13s，手動）</span><b class="${ttkOK===null?"":(ttkOK?"ok":"ng")}">${avgTTK}s</b></div>
+    <div class="stat-row"><span>技能 1 / 2 / 3 使用</span><b>${s.sk1Use} / ${s.sk2Toggle} / ${s.sk3Use}</b></div>
+    <div class="stat-row"><span>施法打斷成功</span><b>${s.interrupts}</b></div>
+    <div class="stat-row"><span>衝鋒硬擋反制</span><b>${s.blocks||0}</b></div>
+    <div class="stat-row"><span>嚎叫得逞（援軍抵達）</span><b>${s.howlsLanded}</b></div>
+    <div class="stat-row"><span>累計遊玩</span><b>${(s.playTime/60).toFixed(1)} 分鐘</b></div>
+    <div style="margin-top:12px;color:var(--moon-dim);font-size:12px">
+      專業規則（忠於經典）：主要 9 門限學 2、次要 3 門不限；種族只給親和加成、不鎖定任何專業。<br>
+      Canon 檢核：手動戰鬥＝經驗；自動/紮營＝素材與熟練度、零經驗。</div>`;
+  $("panel-stats").classList.add("show");
+}
+
+/* ============ 帳號存檔 ============ */
+function saveAcc(){
+  try{
+    if(P)P.lastTs=Date.now();
+    localStorage.setItem(SAVE_KEY,JSON.stringify(ACC));
+  }catch(e){}
+}
+function loadAcc(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);
+    if(raw){const d=JSON.parse(raw);if(d&&d.v===2&&Array.isArray(d.chars)){ACC=d;
+      while(ACC.chars.length<SLOTS)ACC.chars.push(null);return;}}
+  }catch(e){}
+  ACC={v:2,chars:new Array(SLOTS).fill(null)};
+  saveAcc();
+}
+function exportAcc(){
+  saveAcc();
+  const n=ACC.chars.filter(Boolean).length;
+  const blob=new Blob([JSON.stringify(ACC,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`永恆傳承_帳號存檔_${n}角色.json`;
+  a.click();URL.revokeObjectURL(a.href);
+  alert("帳號已匯出（含全部角色）。換裝置匯入即可無縫接續。");
+}
+function importAcc(file){
+  const r=new FileReader();
+  r.onload=()=>{try{
+    const d=JSON.parse(r.result);
+    if(d&&d.v===2&&Array.isArray(d.chars)){
+      ACC=d;while(ACC.chars.length<SLOTS)ACC.chars.push(null);
+      saveAcc();renderSlots();alert("帳號匯入成功。");
+    }else alert("存檔格式不正確（需為 v0.2 以上的帳號存檔）。");
+  }catch(e){alert("存檔讀取失敗："+e.message);}};
+  r.readAsText(file);
+}
+
+/* ============ 綁定 ============ */
+$("sk1").onclick=useSk1;$("sk2").onclick=useSk2;$("sk3").onclick=useSk3;
+$("btn-explore").onclick=explore;
+$("btn-auto").onclick=toggleAuto;
+$("btn-camp").onclick=toggleCamp;
+$("btn-eat").onclick=eat;
+$("btn-4").onclick=()=>{if(inCombat)flee();else tryGather();};
+$("btn-bag").onclick=openBag;$("btn-quest").onclick=openQuestLog;
+$("btn-profs").onclick=openProfs;$("btn-zone2").onclick=()=>{if(!inCombat)openZone();};
+$("btn-stats").onclick=openStats;
+$("btn-sound").onclick=()=>{soundOn=!soundOn;$("btn-sound").textContent=soundOn?"🔊":"🔇";};
+$("btn-export-acc").onclick=exportAcc;
+$("btn-import-acc").onclick=()=>$("import-file").click();
+$("import-file").onchange=e=>{if(e.target.files[0])importAcc(e.target.files[0]);e.target.value="";};
+document.querySelectorAll(".close").forEach(b=>b.onclick=()=>$(b.dataset.close).classList.remove("show"));
+document.addEventListener("keydown",e=>{
+  if(e.repeat||!$("scr-game").classList.contains("show"))return;
+  if(e.target.tagName==="INPUT")return;
+  switch(e.key){
+    case"1":useSk1();break;case"2":useSk2();break;case"3":useSk3();break;
+    case"e":case"E":eat();break;case"f":case"F":flee();break;
+    case"g":case"G":tryGather();break;
+    case"j":case"J":openQuestLog();break;
+    case"p":case"P":openProfs();break;
+    case" ":e.preventDefault();explore();break;
+  }
+});
+document.addEventListener("pointerdown",()=>{ac();},{once:true});
+
+/* ============ 啟動 ============ */
+loadAcc();
+renderSlots();
+setInterval(tick,TICK);
+setInterval(()=>{if(P)saveAcc();},5000);
+</script>
+</body>
+</html>
