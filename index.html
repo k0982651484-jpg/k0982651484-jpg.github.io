@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0c1310">
-<title>永恆傳承 M0 — v0.9.3</title>
+<title>永恆傳承 M0 — v0.9.4</title>
 <style>
 :root{
   --night:#0c1310; --night-2:#131e18; --night-3:#1b2a21;
@@ -201,7 +201,7 @@ h1{font-size:20px;letter-spacing:6px;text-align:center;font-weight:normal}
 <div class="screen show" id="scr-select">
   <div id="sel-wrap">
     <h1>永恆傳承</h1>
-    <div class="sub">ETERNAL LEGACY · M0 原型 v0.9.3</div>
+    <div class="sub">ETERNAL LEGACY · M0 原型 v0.9.4</div>
     <div id="slots"></div>
   </div>
   <div id="sel-foot">
@@ -268,7 +268,7 @@ h1{font-size:20px;letter-spacing:6px;text-align:center;font-weight:normal}
   <div id="log-wrap"><div id="log"></div></div>
   <div id="foot">
     <button id="btn-bag">背包</button>
-    <button id="btn-quest">任務</button>
+    <button id="btn-quest">任務<span id="quest-dot" style="display:none;color:var(--ember)"> ●</span></button>
     <button id="btn-profs">專業</button>
     <button id="btn-zone2">地圖</button>
     <button id="btn-stats">統計</button>
@@ -2306,7 +2306,7 @@ function enterGame(slot,fresh){
   if(merc){merc.atkTimer=0;if(merc.hp<=0)merc.hp=mercHpMax();
     log("🧝 灰羽在營地等著你，起身背起了獵弓。","npc");}
   logEl.innerHTML="";
-  log("—— 永恆傳承 M0 · <b>v0.9.3</b>（Runner 機制）——","sys");
+  log("—— 永恆傳承 M0 · <b>v0.9.4</b>（任務指引＋傭兵休整）——","sys");
   const c=CLASSES[P.cls],r=RACES[P.race];
   $("char-name").innerHTML=`${r.icon} ${P.name} <b id="lv">Lv.${P.lv}</b>`;
   $("player-avatar").textContent=c.avatar||c.icon;
@@ -2516,6 +2516,18 @@ function questState(qid){
   if(q.type==="kill")return st.p>=q.n?2:1;
   return (P.inv[q.item]||0)>=q.n?2:1;
 }
+function anyQuestReady(){return QUEST_ORDER.some(qid=>P.quests[qid]&&!P.quests[qid].done&&questState(qid)===2);}
+function checkCollectNotify(){
+  QUEST_ORDER.forEach(qid=>{
+    const q=QUESTS[qid],st=P.quests[qid];
+    if(!st||st.done||q.type==="kill")return;
+    const ready=(P.inv[q.item]||0)>=q.n;
+    if(ready&&!st.noted){st.noted=1;sfx.quest();
+      const g=BUILDINGS.find(b=>b.id===q.giver);
+      log(`📜 <b>${q.name}</b>：${q.item}×${q.n} 備齊 —— <b>完成了！回村向${(g&&g.npc)||"告示板"}回報吧。</b>`,"gold");}
+    else if(!ready&&st.noted)st.noted=0;
+  });
+}
 function buildingHasNews(bid){
   return questsAt(bid).some(qid=>{
     const s=questState(qid);
@@ -2706,7 +2718,7 @@ function openZone(){
     const locked=P.lv<z.lvReq;
     const d=document.createElement("button");
     d.className="zone-card"+(P.zone===z.id?" on":"")+(locked?" locked":"");
-    d.innerHTML=`<b>${z.village?"🏘️ ":""}${z.name}</b> <span style="font-size:11px;color:var(--moon-dim)">${z.village?"":"（需 Lv."+z.lvReq+"）"}</span>
+    d.innerHTML=`<b>${z.village?"🏘️ ":""}${z.name}</b>${z.village&&anyQuestReady()?' <span style="color:var(--ember);font-size:11px">● 有委託可回報</span>':""} <span style="font-size:11px;color:var(--moon-dim)">${z.village?"":"（需 Lv."+z.lvReq+"）"}</span>
       <div class="zd">${z.desc}</div>`;
     d.disabled=locked;
     d.onclick=()=>{
@@ -3274,6 +3286,10 @@ function tick(){
     if(P.hp<hpMax()){
       P.hp=Math.min(hpMax(),P.hp+CFG.player.regenOOC*raceMod("regen",1)*TICK/1000+(eating?eating.rate*TICK/1000:0));
     }
+    if(merc&&merc.hp>0&&merc.hp<mercHpMax()){
+      merc.hp=Math.min(mercHpMax(),merc.hp+CFG.player.regenOOC*1.5*TICK/1000);
+      refreshMercChip();
+    }
     if(eating&&(now>=eating.until||P.hp>=hpMax())){
       eating=null;
       const z=zoneById(P.zone);
@@ -3286,6 +3302,8 @@ function tick(){
 
 /* ============ UI 更新 ============ */
 function refreshUI(){
+  checkCollectNotify();
+  const _qd=$("quest-dot");if(_qd)_qd.style.display=anyQuestReady()?"inline":"none";
   if(!P)return;
   const c=CLASSES[P.cls],rc=resCfg();
   const hpr=P.hp/hpMax();
