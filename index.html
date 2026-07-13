@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0c1310">
-<title>永恆傳承 M0 — v0.9.6</title>
+<title>永恆傳承 M0 — v0.9.7</title>
 <style>
 :root{
   --night:#0c1310; --night-2:#131e18; --night-3:#1b2a21;
@@ -203,7 +203,7 @@ h1{font-size:20px;letter-spacing:6px;text-align:center;font-weight:normal}
 <div class="screen show" id="scr-select">
   <div id="sel-wrap">
     <h1>永恆傳承</h1>
-    <div class="sub">ETERNAL LEGACY · M0 原型 v0.9.6</div>
+    <div class="sub">ETERNAL LEGACY · M0 原型 v0.9.7</div>
     <div id="slots"></div>
   </div>
   <div id="sel-foot">
@@ -517,7 +517,46 @@ h1{font-size:20px;letter-spacing:6px;text-align:center;font-weight:normal}
     1289
    ]
   ],
-  "deviation": "Lv15-60 總曲線偏差≤3%;Lv10-14 以實測表調校怪物HP"
+  "deviation": "Lv15-60 總曲線偏差≤3%;Lv10-14 以實測表調校怪物HP",
+  "attackTable": {
+   "note": "單次擲骰判定,優先序:未命中→閃避→招架→格擋→爆擊→命中;2026-07-14 定案",
+   "order": [
+    "miss",
+    "dodge",
+    "parry",
+    "block",
+    "crit",
+    "hit"
+   ],
+   "miss": {
+    "base": 0.05,
+    "perLvlDiff": 0.01
+   },
+   "dodge": {
+    "base": 0.05,
+    "agiPer1Pct": 20
+   },
+   "parry": {
+    "base": 0.05,
+    "meleeOnly": true,
+    "frontOnly": true,
+    "effect": "下次反擊加速"
+   },
+   "block": {
+    "base": 0.1,
+    "shieldOnly": true,
+    "effect": "減免固定值(依盾牌等級)"
+   },
+   "crit": {
+    "base": 0.05,
+    "agiPer1Pct": 20,
+    "physMult": 2.0,
+    "spellMult": 1.5
+   },
+   "spell": {
+    "note": "法術獨立判定:命中/抵抗/爆擊×1.5"
+   }
+  }
  }
 }
 </script>
@@ -2206,6 +2245,7 @@ const MC=()=>CURVES.proto.merc;
 const RN=()=>CURVES.proto.runner;
 const ARMOR_TIER={cloth:0,leather:1,mail:2};
 const ARMOR_NAME={cloth:"布甲",leather:"皮甲",mail:"鎖甲"};
+function wearersOf(t){return Object.values(CLASSES).filter(c=>ARMOR_TIER[t]<=ARMOR_TIER[c.armorMax||"cloth"]).map(c=>c.name).join("/");}
 function canWear(name){const it=ITEMS[name];
   if(!it||!it.armorEq||!it.armorType)return true;
   return ARMOR_TIER[it.armorType]<=ARMOR_TIER[CLASSES[P.cls].armorMax||"cloth"];}
@@ -2341,7 +2381,7 @@ function enterGame(slot,fresh){
   if(merc){merc.atkTimer=0;if(merc.hp<=0)merc.hp=mercHpMax();
     log("🧝 灰羽在營地等著你，起身背起了獵弓。","npc");}
   logEl.innerHTML="";
-  log("—— 永恆傳承 M0 · <b>v0.9.6</b>（技能說明＋改名＋專業重置＋戰鬥視覺）——","sys");
+  log("—— 永恆傳承 M0 · <b>v0.9.7</b>（重製措辭＋製作穿戴說明＋判定表入典）——","sys");
   const c=CLASSES[P.cls],r=RACES[P.race];
   $("char-name").innerHTML=`${r.icon} <span style="text-decoration:underline dotted;cursor:pointer">${P.name}</span> <b id="lv">Lv.${P.lv}</b>`;
   $("char-name").onclick=()=>{
@@ -2428,9 +2468,9 @@ function primaryCount(){
 }
 function dropProf(key){
   const info=PROFS[key];if(!P.profs[key]||info.tier!=="primary")return;
-  if(!confirm(`放下【${info.name}】？熟練度 ${P.profs[key].lv} 會被記住，之後重新拜師可找回。`))return;
+  if(!confirm(`重製專業選擇——移除【${info.name}】？熟練度 ${P.profs[key].lv} 會被記住，之後重新拜師可找回。`))return;
   P.profMem[key]=P.profs[key].lv;delete P.profs[key];
-  log(`📘 你放下了 <b>${info.icon} ${info.name}</b>（熟練度 ${P.profMem[key]} 已記住，重新拜師可找回）。`,"sys");
+  log(`📘 你重製了專業選擇——移除 <b>${info.icon} ${info.name}</b>（熟練度 ${P.profMem[key]} 已記住，重新拜師可找回）。`,"sys");
   saveAcc();openProfs();refreshUI();
 }
 function learnProf(key){
@@ -2535,7 +2575,7 @@ function openProfs(){
     const p=P.profs[k],info=PROFS[k],bonus=profBonus(k),eff=p.lv+bonus;
     html+=`<div style="margin-bottom:4px"><b>${info.icon} ${info.name}</b>
       <span style="font-size:11px;color:var(--moon-dim)">（${info.tier==="primary"?"主要·"+info.kind:"次要"}）
-      ${p.lv}${bonus?` <span class="ok">+${bonus}</span> = ${eff}`:""} / ${PROF_CAP}${bonus?`+${bonus}`:""}</span>${info.tier==="primary"?` <button class="mini" onclick="dropProf('${k}')">放下</button>`:""}</div>
+      ${p.lv}${bonus?` <span class="ok">+${bonus}</span> = ${eff}`:""} / ${PROF_CAP}${bonus?`+${bonus}`:""}</span>${info.tier==="primary"?` <button class="mini" onclick="dropProf('${k}')">重製</button>`:""}</div>
       <div class="prof-bar"><i style="transform:scaleX(${Math.min(1,p.lv/PROF_CAP)})"></i></div>`;
     const rs=RECIPES.filter(r=>r.prof===k);
     if(k==="skin")html+=`<div style="font-size:12px;color:var(--moon-dim);margin-bottom:8px">擊殺野獸後自動嘗試剝皮；紮營時也會累積。</div>`;
@@ -2551,7 +2591,7 @@ function openProfs(){
         outIt&&outIt.potion?`藥水 · 回復 ${outIt.potion}（戰鬥可用）`:
         outIt&&outIt.band?`繃帶 · 回復 ${outIt.band}（戰鬥可用，CD ${CFG.bandCD}s）`:
         outIt&&outIt.bomb?`炸彈 · 傷害 ${outIt.bomb}${outIt.stun?`＋暈 ${outIt.stun}s`:""}（戰鬥可用）`:
-        outIt&&outIt.armorEq?`防具 · 護甲 +${outIt.armorEq}`:
+        outIt&&outIt.armorEq?`防具 · 護甲 +${outIt.armorEq}${outIt.armorType?` · ${ARMOR_NAME[outIt.armorType]}（${wearersOf(outIt.armorType)}可穿）${canWear(r.out[0])?"":'<span style="color:var(--blood)"> 本職業不可穿</span>'}`:""}`:
         outIt&&outIt.weapon?`武器 · 攻擊 +${outIt.weapon}`:
         outIt&&outIt.food?`食物 · 回復 ${outIt.food}`:"";
       html+=`<div class="q-item${okReq?"":" done-forever"}">
