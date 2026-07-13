@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0c1310">
-<title>永恆傳承 M0 — v0.9</title>
+<title>永恆傳承 M0 — v0.9.1</title>
 <style>
 :root{
   --night:#0c1310; --night-2:#131e18; --night-3:#1b2a21;
@@ -201,7 +201,7 @@ h1{font-size:20px;letter-spacing:6px;text-align:center;font-weight:normal}
 <div class="screen show" id="scr-select">
   <div id="sel-wrap">
     <h1>永恆傳承</h1>
-    <div class="sub">ETERNAL LEGACY · M0 原型 v0.9</div>
+    <div class="sub">ETERNAL LEGACY · M0 原型 v0.9.1</div>
     <div id="slots"></div>
   </div>
   <div id="sel-foot">
@@ -2293,9 +2293,13 @@ function enterGame(slot,fresh){
   if(P.equip[1]&&P.equip[1].armor===undefined)P.equip[1].armor=0;
   if(P.hp<=0)P.hp=hpMax();
   if(fresh){P.hp=hpMax();P.resVal=(CLASSES[P.cls].res==="rage")?0:CFG.resource[CLASSES[P.cls].res].max;}
-  inCombat=false;mobs=[];pendingSupport=null;eating=null;autoBattle=false;campAccum=0;merc=null;
+  inCombat=false;mobs=[];pendingSupport=null;eating=null;autoBattle=false;campAccum=0;
+  if(P.merc===undefined)P.merc=null;
+  merc=P.merc;
+  if(merc){merc.atkTimer=0;if(merc.hp<=0)merc.hp=mercHpMax();
+    log("🧝 灰羽在營地等著你，起身背起了獵弓。","npc");}
   logEl.innerHTML="";
-  log("—— 永恆傳承 M0 · <b>v0.9</b>（傭兵系統）——","sys");
+  log("—— 永恆傳承 M0 · <b>v0.9.1</b>（傭兵系統）——","sys");
   const c=CLASSES[P.cls],r=RACES[P.race];
   $("char-name").innerHTML=`${r.icon} ${P.name} <b id="lv">Lv.${P.lv}</b>`;
   $("player-avatar").textContent=c.avatar||c.icon;
@@ -2628,9 +2632,9 @@ function openBuilding(bid){
       const free=mercBond()>=mc.perk2Bond;
       if(!free&&P.copper<mc.hireCost){log("銅幣不夠雇傭灰羽。","sys");return;}
       if(!free)P.copper-=mc.hireCost;
-      merc={id:"grey",hp:mercHpMax(),atkTimer:0};sfx.coin();
+      merc={id:"grey",hp:mercHpMax(),atkTimer:0};P.merc=merc;sfx.coin();
       log(`🧝 <b>灰羽背起獵弓與你同行。</b>「${MERCS.grey.hello}」`,"npc");
-    }else{merc=null;log("灰羽點點頭，轉身回了小屋。","npc");}
+    }else{merc=null;P.merc=null;log("灰羽點點頭，轉身回了小屋。","npc");}
     refreshMercChip();saveAcc();openBuilding(bid);refreshUI();
   });
   body.querySelectorAll("[data-buyback]").forEach(btn=>btn.onclick=()=>{
@@ -3326,6 +3330,9 @@ function openBag(){
     if(!it||!(P.inv[name]>0))return;
     P.inv[name]--;
     const hadEnch=P.equip[0].ench;
+    const oldW=P.equip[0].name;
+    if(oldW&&ITEMS[oldW]&&ITEMS[oldW].weapon){P.inv[oldW]=(P.inv[oldW]||0)+1;
+      log(`你把<b>${oldW}</b>收回了背包。`,"sys");}
     P.weaponName=name;P.weaponAtk=it.weapon;
     P.equip[0]={name,dur:100,max:100,ench:0};
     sfx.rare();
@@ -3337,6 +3344,9 @@ function openBag(){
     if(!it||!(P.inv[name]>0))return;
     P.inv[name]--;
     const hadEnch=P.equip[1].ench;
+    const oldA=P.equip[1].name;
+    if(oldA&&ITEMS[oldA]&&ITEMS[oldA].armorEq){P.inv[oldA]=(P.inv[oldA]||0)+1;
+      log(`你把<b>${oldA}</b>收回了背包。`,"sys");}
     P.equip[1]={name,dur:100,max:100,armor:it.armorEq,ench:0};
     sfx.rare();
     log(`🛡️ 你穿上了<b>${name}</b>（護甲 +${it.armorEq}）。${hadEnch?"<span class='ng'>舊防具的附魔隨之消散。</span>":""}`,"gold");
