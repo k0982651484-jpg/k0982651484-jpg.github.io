@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0c1310">
-<title>永恆傳承 M0 — v0.9.5</title>
+<title>永恆傳承 M0 — v0.9.6</title>
 <style>
 :root{
   --night:#0c1310; --night-2:#131e18; --night-3:#1b2a21;
@@ -122,7 +122,9 @@ h1{font-size:20px;letter-spacing:6px;text-align:center;font-weight:normal}
 .mob .cast i{position:absolute;inset:0;background:var(--pale);transform-origin:left}
 .mob .tag{position:absolute;top:-8px;right:-6px;font-size:10px;background:var(--blood);color:var(--pale);padding:1px 5px;display:none}
 .float-dmg{position:absolute;font-family:ui-monospace,Menlo,monospace;font-weight:bold;pointer-events:none;z-index:5;text-shadow:0 1px 3px #000;animation:rise .9s ease-out forwards}
-.float-dmg.crit{font-size:24px;color:var(--pale);animation:critrise 1s ease-out forwards}
+.float-dmg.crit{font-size:30px;color:var(--ember);font-weight:bold;text-shadow:0 0 12px rgba(224,136,64,.85);animation:critrise 1s ease-out forwards}
+.float-dmg.crit-taken{font-size:28px;color:var(--blood);font-weight:bold;text-shadow:0 0 12px rgba(200,80,60,.85);animation:critrise 1s ease-out forwards}
+.float-dmg.block{font-size:18px;color:#9ec5e8;text-shadow:0 0 8px rgba(158,197,232,.7)}
 .float-dmg.normal{font-size:16px;color:#e8b090}
 .float-dmg.taken{font-size:16px;color:var(--blood)}
 .float-dmg.heal{font-size:15px;color:var(--leaf)}
@@ -201,7 +203,7 @@ h1{font-size:20px;letter-spacing:6px;text-align:center;font-weight:normal}
 <div class="screen show" id="scr-select">
   <div id="sel-wrap">
     <h1>永恆傳承</h1>
-    <div class="sub">ETERNAL LEGACY · M0 原型 v0.9.5</div>
+    <div class="sub">ETERNAL LEGACY · M0 原型 v0.9.6</div>
     <div id="slots"></div>
   </div>
   <div id="sel-foot">
@@ -398,7 +400,8 @@ h1{font-size:20px;letter-spacing:6px;text-align:center;font-weight:normal}
    "windowSec": 4,
    "backDmgMult": 1.25,
    "helpDelay": 3.5
-  }
+  },
+  "renameCost": 100
  },
  "canon60": {
   "note": "GDB增補一 v1.0 全部鎖定值",
@@ -2324,7 +2327,7 @@ function enterGame(slot,fresh){
   if(P.quests===undefined)P.quests={};
   if(P.profs===undefined)P.profs={};
   if(P.camping===undefined)P.camping=false;
-  if(P.mercBond===undefined)P.mercBond={};if(P.mercStash===undefined)P.mercStash={};
+  if(P.mercBond===undefined)P.mercBond={};if(P.mercStash===undefined)P.mercStash={};if(P.profMem===undefined)P.profMem={};
   /* 遊戲內計時器以 now（本階段秒數）為基準，跨階段一律歸零，避免假冷卻 */
   P.gatherAt=0;P.fishAt=0;P.bandAt=0;P.sk3ReadyAt=0;
   if(P.weaponAtk===undefined){P.weaponAtk=0;P.weaponName=P.equip[0].name;}
@@ -2338,9 +2341,24 @@ function enterGame(slot,fresh){
   if(merc){merc.atkTimer=0;if(merc.hp<=0)merc.hp=mercHpMax();
     log("🧝 灰羽在營地等著你，起身背起了獵弓。","npc");}
   logEl.innerHTML="";
-  log("—— 永恆傳承 M0 · <b>v0.9.5</b>（裝備經濟＋職業限制＋地窖倉庫）——","sys");
+  log("—— 永恆傳承 M0 · <b>v0.9.6</b>（技能說明＋改名＋專業重置＋戰鬥視覺）——","sys");
   const c=CLASSES[P.cls],r=RACES[P.race];
-  $("char-name").innerHTML=`${r.icon} ${P.name} <b id="lv">Lv.${P.lv}</b>`;
+  $("char-name").innerHTML=`${r.icon} <span style="text-decoration:underline dotted;cursor:pointer">${P.name}</span> <b id="lv">Lv.${P.lv}</b>`;
+  $("char-name").onclick=()=>{
+    if(inCombat){log("戰鬥中不能改名。","sys");return;}
+    const fee=P.renamed?CURVES.proto.renameCost:0;
+    const nn=prompt(fee?`改名需 ${fee} 銅（首次已用）。輸入新名字：`:"首次改名免費。輸入新名字：",P.name);
+    if(nn===null)return;
+    const name=nn.trim();
+    if(!name||name.length>8){log("名字需為 1–8 字。","sys");return;}
+    if(name===P.name)return;
+    if(fee&&P.copper<fee){log("銅幣不夠改名。","sys");return;}
+    if(fee)P.copper-=fee;
+    const oldName=P.name;P.name=name;P.renamed=true;
+    log(`📜 ${oldName} 自此改名為 <b>${P.name}</b>${fee?`（−${fee} 銅）`:"（首次免費）"}。`,"gold");
+    $("char-name").innerHTML=`${RACES[P.race].icon} <span style="text-decoration:underline dotted;cursor:pointer">${P.name}</span> <b id="lv">Lv.${P.lv}</b>`;
+    saveAcc();refreshUI();
+  };
   $("player-avatar").textContent=c.avatar||c.icon;
   $("sk1-name").textContent=c.sk1.name;
   $("sk1-cost").textContent=c.sk1.cost+" "+CFG.resource[c.res].label;
@@ -2408,6 +2426,13 @@ function profUp(key,amt){
 function primaryCount(){
   return Object.keys(P.profs).filter(k=>PROFS[k].tier==="primary").length;
 }
+function dropProf(key){
+  const info=PROFS[key];if(!P.profs[key]||info.tier!=="primary")return;
+  if(!confirm(`放下【${info.name}】？熟練度 ${P.profs[key].lv} 會被記住，之後重新拜師可找回。`))return;
+  P.profMem[key]=P.profs[key].lv;delete P.profs[key];
+  log(`📘 你放下了 <b>${info.icon} ${info.name}</b>（熟練度 ${P.profMem[key]} 已記住，重新拜師可找回）。`,"sys");
+  saveAcc();openProfs();refreshUI();
+}
 function learnProf(key){
   const info=PROFS[key];
   if(P.profs[key]){log(`你已經學會${info.name}了。`,"sys");return;}
@@ -2416,6 +2441,8 @@ function learnProf(key){
   if(P.copper<CFG.learnCost){log("銅幣不夠拜師。","sys");return;}
   P.copper-=CFG.learnCost;
   P.profs[key]={lv:1};
+  if(P.profMem&&P.profMem[key]){P.profs[key].lv=P.profMem[key];delete P.profMem[key];
+    log(`📘 手藝沒有生疏——${info.name}熟練度找回 <b>${P.profs[key].lv}</b>。`,"gold");}
   sfx.quest();
   const bonus=profBonus(key);
   log(`📘 你學會了 <b>${info.icon} ${info.name}</b>（${info.tier==="primary"?"主要":"次要"}）！${bonus?`種族親和 +${bonus}，`:""}${info.desc}`,"gold");
@@ -2508,7 +2535,7 @@ function openProfs(){
     const p=P.profs[k],info=PROFS[k],bonus=profBonus(k),eff=p.lv+bonus;
     html+=`<div style="margin-bottom:4px"><b>${info.icon} ${info.name}</b>
       <span style="font-size:11px;color:var(--moon-dim)">（${info.tier==="primary"?"主要·"+info.kind:"次要"}）
-      ${p.lv}${bonus?` <span class="ok">+${bonus}</span> = ${eff}`:""} / ${PROF_CAP}${bonus?`+${bonus}`:""}</span></div>
+      ${p.lv}${bonus?` <span class="ok">+${bonus}</span> = ${eff}`:""} / ${PROF_CAP}${bonus?`+${bonus}`:""}</span>${info.tier==="primary"?` <button class="mini" onclick="dropProf('${k}')">放下</button>`:""}</div>
       <div class="prof-bar"><i style="transform:scaleX(${Math.min(1,p.lv/PROF_CAP)})"></i></div>`;
     const rs=RECIPES.filter(r=>r.prof===k);
     if(k==="skin")html+=`<div style="font-size:12px;color:var(--moon-dim);margin-bottom:8px">擊殺野獸後自動嘗試剝皮；紮營時也會累積。</div>`;
@@ -2881,7 +2908,7 @@ function playerHit(base,skillTag,verb){
   let dmg=base;
   if(w.fleeing>0)dmg*=RN().backDmgMult;
   const crit=Math.random()<critCh();
-  if(crit)dmg*=2;
+  if(crit){dmg*=2;shake();}
   dmg*=(1-CFG.armorReduce(m.armor));
   dmg=Math.max(1,Math.round(dmg));
   w.hp-=dmg;
@@ -3002,9 +3029,12 @@ function mobAttacks(w,mult){
     refreshMercChip();return;
   }
   let dmg=rnd(m.atkMin,m.atkMax)*(mult||1);
+  let mcrit=false;
+  if(!(mult&&mult>1)&&Math.random()<((CFG.mons&&CFG.mons.crit)||0.02)){mcrit=true;dmg*=2;}
   let blocked=false;
   if(mult&&mult>1&&P.stance){
     dmg*=0.35;blocked=true;w.stun=2.5;P.stats.blocks=(P.stats.blocks||0)+1;
+    floatNum($("player-avatar"),"格擋！","block");
   }
   dmg*=(1-CFG.armorReduce(armor()));
   dmg=Math.max(1,Math.round(dmg));
@@ -3012,7 +3042,8 @@ function mobAttacks(w,mult){
   if(resCfg().combatOnly)gainRes(CFG.resource.rage.perTaken);
   const av=$("player-avatar");
   av.classList.remove("hit");void av.offsetWidth;av.classList.add("hit");
-  floatNum(av,"-"+dmg,"taken");
+  floatNum(av,mcrit?"-"+dmg+"！！":"-"+dmg,mcrit?"crit-taken":"taken");
+  if(mcrit){shake();log(`💥 ${m.name}的猛擊命中要害——<b>爆擊 ${dmg}</b>！`,"warn");}
   sfx.hurt();
   if(mult&&mult>1)shake();
   if(blocked)log(`🛡️ <b>你穩穩擋下了衝鋒！</b>${m.name}被震得暈頭轉向（僅受 ${dmg} 傷害）。`,"crit");
@@ -3495,6 +3526,12 @@ function openStats(){
   const ttkOK=s.ttkList.length?(avgTTK>=11&&avgTTK<=13):null;
   const profStr=PROF_ORDER.filter(k=>P.profs[k]).map(k=>`${PROFS[k].name} ${P.profs[k].lv}${profBonus(k)?`(+${profBonus(k)})`:""}`).join("、")||"—";
   $("stats-body").innerHTML=`
+    <div style="font-size:12px;color:var(--moon-dim);margin:2px 0">— 技能說明 —</div>
+    ${(()=>{const c=CLASSES[P.cls];return[
+      `<div class="stat-row"><span><b>[1] ${c.sk1.name}</b>（${c.sk1.cost} ${resCfg().name}·${c.sk1.kind==="prime"?"蓄力":"瞬發"}${c.sk1.dmg?"·"+c.sk1.dmg[0]+"–"+c.sk1.dmg[1]+"傷":""}${c.sk1.bonus?"·+"+c.sk1.bonus+"傷":""}）<br><span style="font-size:11px;color:var(--moon-dim)">${c.sk1.desc||""}</span></span></div>`,
+      `<div class="stat-row"><span><b>[2] ${c.sk2.name}</b>（姿態切換·無消耗）<br><span style="font-size:11px;color:var(--moon-dim)">${c.sk2.desc||""}</span></span></div>`,
+      `<div class="stat-row"><span><b>[3] ${c.sk3.name}</b>（${c.sk3.cost} ${resCfg().name}·冷卻 ${Math.round(sk3CD())} 秒·${c.sk3.min}–${c.sk3.max}傷）<br><span style="font-size:11px;color:var(--moon-dim)">${c.sk3.desc||""}</span></span></div>`
+    ].join("")})()}
     <div class="stat-row"><span>角色</span><b>${RACES[P.race].name} ${CLASSES[P.cls].name} Lv.${P.lv}</b></div>
     <div class="stat-row"><span>專業</span><b style="font-size:12px">${profStr}</b></div>
     <div class="stat-row"><span>戰鬥場次</span><b>${s.battles}</b></div>
