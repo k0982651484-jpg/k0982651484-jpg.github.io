@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0c1310">
-<title>永恆傳承 M0 — v0.9.4</title>
+<title>永恆傳承 M0 — v0.9.5</title>
 <style>
 :root{
   --night:#0c1310; --night-2:#131e18; --night-3:#1b2a21;
@@ -201,7 +201,7 @@ h1{font-size:20px;letter-spacing:6px;text-align:center;font-weight:normal}
 <div class="screen show" id="scr-select">
   <div id="sel-wrap">
     <h1>永恆傳承</h1>
-    <div class="sub">ETERNAL LEGACY · M0 原型 v0.9.4</div>
+    <div class="sub">ETERNAL LEGACY · M0 原型 v0.9.5</div>
     <div id="slots"></div>
   </div>
   <div id="sel-foot">
@@ -655,7 +655,8 @@ h1{font-size:20px;letter-spacing:6px;text-align:center;font-weight:normal}
     "max": 16,
     "desc": "立即重擊；可打斷施法"
    },
-   "avatar": "🤺"
+   "avatar": "🤺",
+   "armorMax": "mail"
   },
   "vow": {
    "name": "聖衛",
@@ -687,7 +688,8 @@ h1{font-size:20px;letter-spacing:6px;text-align:center;font-weight:normal}
     "max": 15,
     "desc": "神聖重擊；可打斷施法"
    },
-   "avatar": "💂"
+   "avatar": "💂",
+   "armorMax": "mail"
   },
   "ranger": {
    "name": "遊俠",
@@ -718,7 +720,8 @@ h1{font-size:20px;letter-spacing:6px;text-align:center;font-weight:normal}
     "max": 16,
     "desc": "貫穿重箭；可打斷施法"
    },
-   "avatar": "🧝"
+   "avatar": "🧝",
+   "armorMax": "leather"
   },
   "shade": {
    "name": "影刃",
@@ -749,7 +752,8 @@ h1{font-size:20px;letter-spacing:6px;text-align:center;font-weight:normal}
     "max": 17,
     "desc": "致命一擊；可打斷施法"
    },
-   "avatar": "🥷"
+   "avatar": "🥷",
+   "armorMax": "leather"
   },
   "friar": {
    "name": "修士",
@@ -781,7 +785,8 @@ h1{font-size:20px;letter-spacing:6px;text-align:center;font-weight:normal}
     "max": 15,
     "desc": "聖光爆發；可打斷施法"
    },
-   "avatar": "🧘"
+   "avatar": "🧘",
+   "armorMax": "cloth"
   },
   "arcan": {
    "name": "秘法師",
@@ -812,7 +817,8 @@ h1{font-size:20px;letter-spacing:6px;text-align:center;font-weight:normal}
     "max": 18,
     "desc": "爆裂火球；可打斷施法"
    },
-   "avatar": "🧙"
+   "avatar": "🧙",
+   "armorMax": "cloth"
   },
   "hex": {
    "name": "咒術師",
@@ -844,7 +850,8 @@ h1{font-size:20px;letter-spacing:6px;text-align:center;font-weight:normal}
     "max": 16,
     "desc": "黑焰爆發；可打斷施法"
    },
-   "avatar": "🦹"
+   "avatar": "🦹",
+   "armorMax": "cloth"
   },
   "spirit": {
    "name": "靈語者",
@@ -875,7 +882,8 @@ h1{font-size:20px;letter-spacing:6px;text-align:center;font-weight:normal}
     "max": 16,
     "desc": "先祖顯靈重擊；可打斷施法"
    },
-   "avatar": "🧚"
+   "avatar": "🧚",
+   "armorMax": "leather"
   }
  },
  "raceClasses": {
@@ -1171,40 +1179,59 @@ h1{font-size:20px;letter-spacing:6px;text-align:center;font-weight:normal}
    "sell": 28
   },
   "軟皮護肩": {
-   "armorEq": 4
+   "armorEq": 4,
+   "armorType": "leather",
+   "sell": 8
   },
   "硬皮背心": {
-   "armorEq": 8
+   "armorEq": 8,
+   "armorType": "leather",
+   "sell": 16
   },
   "深林皮甲": {
-   "armorEq": 14
+   "armorEq": 14,
+   "armorType": "leather",
+   "sell": 28
   },
   "亞麻護肩": {
-   "armorEq": 3
+   "armorEq": 3,
+   "armorType": "cloth",
+   "sell": 6
   },
   "亞麻長袍": {
-   "armorEq": 6
+   "armorEq": 6,
+   "armorType": "cloth",
+   "sell": 12
   },
   "加固長袍": {
-   "armorEq": 12
+   "armorEq": 12,
+   "armorType": "cloth",
+   "sell": 24
   },
   "銅片護甲": {
-   "armorEq": 10
+   "armorEq": 10,
+   "armorType": "mail",
+   "sell": 20
   },
   "獠牙短矛": {
-   "weapon": 2
+   "weapon": 2,
+   "sell": 12
   },
   "灰狼獵刃": {
-   "weapon": 3
+   "weapon": 3,
+   "sell": 18
   },
   "狼王之牙": {
-   "weapon": 5
+   "weapon": 5,
+   "sell": 30
   },
   "粗銅劍": {
-   "weapon": 2
+   "weapon": 2,
+   "sell": 12
   },
   "精鐵刺劍": {
-   "weapon": 4
+   "weapon": 4,
+   "sell": 24
   }
  },
  "recipes": [
@@ -2174,6 +2201,11 @@ let mobs=[],inCombat=false,combatStart=0,combatN0=0,pendingSupport=null,eating=n
 let merc=null;
 const MC=()=>CURVES.proto.merc;
 const RN=()=>CURVES.proto.runner;
+const ARMOR_TIER={cloth:0,leather:1,mail:2};
+const ARMOR_NAME={cloth:"布甲",leather:"皮甲",mail:"鎖甲"};
+function canWear(name){const it=ITEMS[name];
+  if(!it||!it.armorEq||!it.armorType)return true;
+  return ARMOR_TIER[it.armorType]<=ARMOR_TIER[CLASSES[P.cls].armorMax||"cloth"];}
 function mercHpMax(){return MC().hpBase+MC().hpPerLv*P.lv;}
 function mercBond(){return P.mercBond&&P.mercBond.grey||0;}
 function refreshMercChip(){
@@ -2306,7 +2338,7 @@ function enterGame(slot,fresh){
   if(merc){merc.atkTimer=0;if(merc.hp<=0)merc.hp=mercHpMax();
     log("🧝 灰羽在營地等著你，起身背起了獵弓。","npc");}
   logEl.innerHTML="";
-  log("—— 永恆傳承 M0 · <b>v0.9.4</b>（任務指引＋傭兵休整）——","sys");
+  log("—— 永恆傳承 M0 · <b>v0.9.5</b>（裝備經濟＋職業限制＋地窖倉庫）——","sys");
   const c=CLASSES[P.cls],r=RACES[P.race];
   $("char-name").innerHTML=`${r.icon} ${P.name} <b id="lv">Lv.${P.lv}</b>`;
   $("player-avatar").textContent=c.avatar||c.icon;
@@ -2555,6 +2587,15 @@ function openBuilding(bid){
   let html=`<div class="npc-head"><span class="face">${b.face}</span><span class="say">「${b.say}」</span></div>`;
   if(bid==="inn"){
     html+=`<div class="stat-row"><span>住一晚（HP 全滿）</span><b><button class="mini" data-act="rest">歇息 ${CFG.restCost} 銅</button></b></div>`;
+    html+=`<div style="font-size:12px;color:var(--moon-dim);margin:10px 0 2px">— 梅姨的地窖（帳號共用倉庫，本帳號所有角色可存取） —</div>`;
+    const bkeys=Object.keys(ACC.bank||{}).filter(k=>ACC.bank[k]>0);
+    if(bkeys.length)bkeys.forEach(k=>{html+=`<div class="stat-row"><span>${k} ×${ACC.bank[k]}</span><b><button class="mini" data-bankout="${k}">取出</button></b></div>`;});
+    else html+=`<div style="color:var(--moon-dim);font-size:12px">（地窖空空如也）</div>`;
+    html+=`<div style="font-size:12px;color:var(--moon-dim);margin:10px 0 2px">— 存入地窖（背包） —</div>`;
+    let anyBank=false;
+    Object.keys(P.inv).filter(k=>P.inv[k]>0&&ITEMS[k]).forEach(k=>{anyBank=true;
+      html+=`<div class="stat-row"><span>${k} ×${P.inv[k]}</span><b><button class="mini" data-bankin="${k}">存入</button></b></div>`;});
+    if(!anyBank)html+=`<div style="color:var(--moon-dim);font-size:12px">（背包沒有可存放的物品）</div>`;
   }
   if(bid==="smith"){
     const cost=P.equip.reduce((a,e)=>a+Math.ceil((e.max-e.dur)*CFG.repairRate),0);
@@ -2568,7 +2609,7 @@ function openBuilding(bid){
       html+=`<div class="stat-row"><span>${k}${it.food?`（回復${it.food}）`:""}</span>
         <b><button class="mini" data-buy="${k}">買入 ${it.buy} 銅</button></b></div>`;
     });
-    html+=`<div style="font-size:12px;color:var(--moon-dim);margin:10px 0 2px">— 出售（背包內素材）—</div>`;
+    html+=`<div style="font-size:12px;color:var(--moon-dim);margin:10px 0 2px">— 出售（素材與裝備）—</div>`;
     let any=false;
     Object.keys(P.inv).filter(k=>P.inv[k]>0&&ITEMS[k]&&ITEMS[k].sell).forEach(k=>{
       any=true;
@@ -2644,6 +2685,20 @@ function openBuilding(bid){
       saveAcc();openBuilding(bid);refreshUI();
     }
     if(btn.dataset.act==="fishing"){tryFish();openBuilding(bid);}
+  });
+  body.querySelectorAll("[data-bankin]").forEach(btn=>btn.onclick=()=>{
+    const k=btn.dataset.bankin;if(!(P.inv[k]>0))return;
+    P.inv[k]--;if(P.inv[k]<=0)delete P.inv[k];
+    ACC.bank[k]=(ACC.bank[k]||0)+1;
+    log(`你把【${k}】交給梅姨收進了地窖。`,"sys");
+    saveAcc();openBuilding(bid);refreshUI();
+  });
+  body.querySelectorAll("[data-bankout]").forEach(btn=>btn.onclick=()=>{
+    const k=btn.dataset.bankout;if(!(ACC.bank[k]>0))return;
+    ACC.bank[k]--;if(ACC.bank[k]<=0)delete ACC.bank[k];
+    P.inv[k]=(P.inv[k]||0)+1;
+    log(`你從地窖取回了【${k}】。`,"sys");
+    saveAcc();openBuilding(bid);refreshUI();
   });
   body.querySelectorAll("[data-merc]").forEach(btn=>btn.onclick=()=>{
     const mc=MC();
@@ -3362,7 +3417,9 @@ function openBag(){
       if(P.profs.ench)extra+=` <button class="mini" data-de="${k}">分解</button>`;
     }
     else if(it&&it.armorEq){
-      extra=`<button class="mini" data-armor="${k}">穿上（甲+${it.armorEq}）</button>`;
+      const tn=it.armorType?ARMOR_NAME[it.armorType]+" · ":"";
+      if(canWear(k))extra=`<button class="mini" data-armor="${k}">穿上（${tn}甲+${it.armorEq}）</button>`;
+      else extra=`<span style="font-size:11px;color:var(--blood)">${tn}本職業不可穿</span>`;
       if(P.profs.ench)extra+=` <button class="mini" data-de="${k}">分解</button>`;
     }
     else if(it&&it.potion)extra=`<button class="mini" data-drink="${k}">喝下（回${it.potion}）</button>`;
@@ -3395,6 +3452,7 @@ function openBag(){
   b.querySelectorAll("[data-armor]").forEach(btn=>btn.onclick=()=>{
     const name=btn.dataset.armor,it=ITEMS[name];
     if(!it||!(P.inv[name]>0))return;
+    if(!canWear(name)){log(`你的職業（${CLASSES[P.cls].name}）穿不了${ARMOR_NAME[it.armorType]}——【${name}】可出售、分解，或存進旅店地窖留給其他角色。`,"sys");return;}
     P.inv[name]--;
     const hadEnch=P.equip[1].ench;
     const oldA=P.equip[1].name;
@@ -3464,10 +3522,10 @@ function saveAcc(){
 function loadAcc(){
   try{
     const raw=localStorage.getItem(SAVE_KEY);
-    if(raw){const d=JSON.parse(raw);if(d&&d.v===2&&Array.isArray(d.chars)){ACC=d;
+    if(raw){const d=JSON.parse(raw);if(d&&d.v===2&&Array.isArray(d.chars)){ACC=d;if(!ACC.bank)ACC.bank={};
       while(ACC.chars.length<SLOTS)ACC.chars.push(null);return;}}
   }catch(e){}
-  ACC={v:2,chars:new Array(SLOTS).fill(null)};
+  ACC={v:2,chars:new Array(SLOTS).fill(null),bank:{}};
   saveAcc();
 }
 function exportAcc(){
